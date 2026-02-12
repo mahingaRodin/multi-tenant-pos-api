@@ -4,7 +4,9 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.Email;
 import lombok.*;
+import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 
@@ -26,10 +28,16 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
+    @Column(nullable = false)
+    @Email(message= "Email Should be valid!")
+    private String email;
     private String phone;
 
     @Column(nullable = false)
     private UserRole role;
+
+    @Column(nullable = false)
+    private String password;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
