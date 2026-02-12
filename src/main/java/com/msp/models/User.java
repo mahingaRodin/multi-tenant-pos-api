@@ -1,12 +1,12 @@
-package com.msp.model;
+package com.msp.models;
 
+import com.msp.enums.UserRole;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.Email;
 import lombok.*;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.time.LocalDateTime;
 

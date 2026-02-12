@@ -1,8 +1,8 @@
-package com.msp.service.impl;
+package com.msp.impls;
 
 
-import com.msp.model.User;
-import com.msp.repository.UserRepository;
+import com.msp.models.User;
+import com.msp.repositories.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;

@@ -1,0 +1,9 @@
+package com.msp.services;
+
+import com.msp.payloads.dtos.UserDto;
+import com.msp.payloads.response.AuthResponse;
+
+public interface AuthService {
+    AuthResponse signup(UserDto userDto);
+    AuthResponse login(UserDto userDto);
+}

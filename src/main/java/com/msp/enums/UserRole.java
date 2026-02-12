@@ -1,4 +1,4 @@
-package com.msp.model;
+package com.msp.enums;
 
 public enum UserRole {
     ROLE_USER,
