@@ -79,7 +79,7 @@ public class StoreController {
         return ResponseEntity.ok(storeService.moderateStore(id, status));
     }
 
-    @GetMapping("/{id}")
+    @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse> deleteStore(
             @PathVariable UUID id
     ) throws Exception {
