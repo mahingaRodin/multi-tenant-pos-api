@@ -10,6 +10,7 @@ import com.msp.payloads.response.AuthResponse;
 import com.msp.repositories.UserRepository;
 import com.msp.services.AuthService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
@@ -25,9 +26,10 @@ import java.util.Collection;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
-    private final UserRepository userRepository;
     private final CustomUserImpl customUserImpl;
+    @Autowired
     private UserRepository userRepo;
+    @Autowired
     private JwtProvider provider;
     private CustomUserImpl userImpl;
 
@@ -47,7 +49,7 @@ public class AuthServiceImpl implements AuthService {
         newUser.setFirstName(userDto.getFirstName());
         newUser.setLastName(userDto.getLastName());
         newUser.setPhone(userDto.getPhone());
-        newUser.setRole(UserRole.ROLE_USER);
+        newUser.setRole(userDto.getRole());
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setUpdatedAt(LocalDateTime.now());
@@ -61,7 +63,7 @@ public class AuthServiceImpl implements AuthService {
         authResponse.setJwt(token);
         authResponse.setMessage("Registered Successfully!");
         authResponse.setUser(UserMapper.toDTO(savedUser));
-        return null;
+        return authResponse;
     }
 
     @Override
@@ -75,12 +77,12 @@ public class AuthServiceImpl implements AuthService {
         String role = authorities.iterator().next().getAuthority();
         String token = provider.generateToken(authentication);
 
-        User user = userRepository.findByEmail(email);
+        User user = userRepo.findByEmail(email);
         userRepo.save(user);
 
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
-        authResponse.setMessage("Login Successfully!");
+        authResponse.setMessage("Logged In Successfully!");
         authResponse.setUser(UserMapper.toDTO(user));
         return authResponse;
     }

@@ -12,6 +12,7 @@ public class UserMapper {
         userDto.setEmail(savedUser.getEmail());
         userDto.setRole(savedUser.getRole());
         userDto.setCreatedAt(savedUser.getCreatedAt());
+        userDto.setPassword(savedUser.getPassword());
         userDto.setUpdatedAt(savedUser.getUpdatedAt());
         userDto.setLastLogin(savedUser.getLastLogin());
         userDto.setPhone(savedUser.getPhone());
