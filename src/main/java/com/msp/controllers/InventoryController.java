@@ -49,7 +49,7 @@ public class InventoryController {
             @PathVariable UUID productId
     ) throws Exception {
         return ResponseEntity.ok(
-                inventoryService.getInventoryByProductIdAndBranchId(branchId,productId)
+                inventoryService.getInventoryByProductIdAndBranchId(productId,branchId)
         );
     }
 
