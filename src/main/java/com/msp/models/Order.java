@@ -1,0 +1,45 @@
+package com.msp.models;
+
+import com.msp.enums.EPaymentType;
+import jakarta.persistence.*;
+import lombok.*;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.UUID;
+
+@Entity
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode
+@Table(name = "orders")
+public class Order {
+    @Id
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private UUID id;
+
+    private Double totalAmount;
+    private LocalDateTime createdAt;
+
+    @ManyToOne
+    private Branch branch;
+
+    @ManyToOne
+    private User cashier;
+
+    @ManyToOne
+    private Customer customer;
+
+    @OneToMany
+    private List<OrderItem> items;
+
+    private EPaymentType paymentType;
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
+}
