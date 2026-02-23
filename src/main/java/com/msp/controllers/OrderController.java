@@ -63,7 +63,7 @@ public class OrderController {
         return ResponseEntity.ok(orderService.getOrderByCustomerId(id));
     }
 
-    @GetMapping("/recent/{branchId}")
+    @GetMapping("/recent/branch/{branchId}")
     public ResponseEntity<List<OrderDto>> getRecentOrder(
             @PathVariable UUID branchId
     ) throws Exception {
