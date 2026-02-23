@@ -73,7 +73,7 @@ public class ProductServiceImpl implements ProductService {
 
     @Override
     public List<ProductDto> getProductsByStoreId(UUID storeId) {
-        List<Product> products = productRepo.findStoreById(storeId);
+        List<Product> products = productRepo.findByStoreId(storeId);
         return products.stream()
                 .map(ProductMapper::toDto)
                 .collect(Collectors.toList());

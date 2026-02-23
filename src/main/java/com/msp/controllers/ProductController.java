@@ -33,15 +33,8 @@ public class ProductController {
     }
 
     @GetMapping("/store/{storeId}")
-    public ResponseEntity<List<ProductDto>> getAllProducts(
-            @PathVariable UUID storeId,
-            @RequestHeader("Authorization") String token
-            ) throws Exception {
-        return ResponseEntity.ok(
-                productService.getProductsByStoreId(
-                        storeId
-                )
-        );
+    public ResponseEntity<List<ProductDto>> getAllProducts(@PathVariable UUID storeId) {
+        return ResponseEntity.ok(productService.getProductsByStoreId(storeId));
     }
 
     @GetMapping("/store/{storeId}/search")

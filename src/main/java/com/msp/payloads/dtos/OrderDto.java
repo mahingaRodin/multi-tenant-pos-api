@@ -1,11 +1,6 @@
 package com.msp.payloads.dtos;
 
 import com.msp.enums.EPaymentType;
-import com.msp.models.Branch;
-import com.msp.models.Customer;
-import com.msp.models.OrderItem;
-import com.msp.models.User;
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

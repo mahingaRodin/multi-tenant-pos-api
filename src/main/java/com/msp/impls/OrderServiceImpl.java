@@ -6,6 +6,7 @@ import com.msp.mappers.CustomerMapper;
 import com.msp.mappers.OrderMapper;
 import com.msp.models.*;
 import com.msp.payloads.dtos.OrderDto;
+import com.msp.repositories.BranchRepository;
 import com.msp.repositories.CustomerRepository;
 import com.msp.repositories.OrderRepository;
 import com.msp.repositories.ProductRepository;
@@ -28,12 +29,18 @@ public class OrderServiceImpl implements OrderService {
     private final UserService userService;
     private final ProductRepository productRepository;
     private final CustomerRepository customerRepository;
+    private final BranchRepository branchRepository;
 
     @Override
     public OrderDto createOrder(OrderDto orderDto) throws Exception {
         User cashier = userService.getCurrentUser();
-        Branch branch = cashier.getBranch();
-        if (branch == null) throw new Exception("Branch Not Found!");
+        System.out.println("current_user: " +cashier.getId());
+        System.out.println("Cashier branch: " + (cashier.getBranch() != null ? cashier.getBranch().getId() : null));
+//        Branch branch = cashier.getBranch();
+//        if (branch == null) throw new Exception("Branch Not Found!");
+        Branch branch = branchRepository.findById(orderDto.getBranchId()).orElseThrow(
+                () -> new EntityNotFoundException("Branch not found")
+        );
 
         if (orderDto.getCustomerId() == null) {
             throw new Exception("customerId is required");
@@ -100,9 +107,10 @@ public class OrderServiceImpl implements OrderService {
 
     @Override
     public List<OrderDto> getOrderByCashier(UUID cashierId) {
-        return orderRepository.findByCashierId(cashierId)
+        return orderRepository.findByCashier_Id(cashierId)
                 .stream()
-                .map(OrderMapper::toDto).collect(Collectors.toList());
+                .map(OrderMapper::toDto)
+                .toList();
     }
 
     @Override

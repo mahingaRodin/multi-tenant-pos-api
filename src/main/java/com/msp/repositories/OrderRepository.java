@@ -11,7 +11,7 @@ import java.util.UUID;
 public interface OrderRepository extends JpaRepository<Order, UUID> {
     List<Order> findByCustomerId(UUID customerId);
     List<Order> findByBranchId(UUID branchId);
-    List<Order> findByCashierId(UUID cashierId);
+    List<Order> findByCashier_Id(UUID cashierId);
     List<Order> findByBranchIdAndCreatedAtBetween(UUID branchId, LocalDateTime from, LocalDateTime to);
     List<Order> findByCashierAndCreatedAtBetween(User cashier, LocalDateTime from, LocalDateTime to);
     List<Order> findTop5ByBranchIdOrderByCreatedAtDesc(UUID branchId);

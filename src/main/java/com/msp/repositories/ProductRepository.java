@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 public interface ProductRepository extends JpaRepository<Product, UUID> {
-    List<Product> findStoreById(UUID storeId);
+    List<Product> findByStoreId(UUID storeId);
     @Query("SELECT p FROM Product p " +
         "WHERE p.store.id = :storeId AND (" +
             "LOWER(p.name) LIKE LOWER(CONCAT('%', :query, '%'))"+
