@@ -3,13 +3,17 @@ kind: Ingress
 metadata:
   name: pos-backend
   namespace: pos
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/proxy-body-size: "10m"
 spec:
   ingressClassName: nginx
   rules:
     - http:
         paths:
-          - path: /msp
-            pathType: Prefix
+          - path: /msp(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: pos-backend

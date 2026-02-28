@@ -3,9 +3,13 @@ kind: Service
 metadata:
   name: pos-backend
   namespace: pos
+  labels:
+    app: pos-backend
 spec:
   selector:
     app: pos-backend
   ports:
-    - port: 80
+    - name: http
+      port: 80
       targetPort: 5000
+  type: ClusterIP
