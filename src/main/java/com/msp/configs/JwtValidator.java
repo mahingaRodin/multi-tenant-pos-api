@@ -28,9 +28,10 @@ public class JwtValidator extends OncePerRequestFilter {
         // request.getRequestURI() includes context-path (/msp)
         String uri = request.getRequestURI();
 
-        // Allow swagger + openapi + basic static resources without JWT
+        // Allow swagger + openapi + actuator + basic static resources without JWT
         return uri.startsWith("/msp/swagger-ui")
                 || uri.startsWith("/msp/v3/api-docs")
+                || uri.startsWith("/msp/actuator")
                 || uri.equals("/msp/swagger-ui.html")
                 || uri.startsWith("/msp/favicon.ico")
                 || uri.startsWith("/msp/webjars");
@@ -40,14 +41,14 @@ public class JwtValidator extends OncePerRequestFilter {
     protected void doFilterInternal(
             HttpServletRequest request,
             HttpServletResponse response,
-            FilterChain filterChain
-    ) throws ServletException, IOException {
+            FilterChain filterChain) throws ServletException, IOException {
 
         // Prefer Authorization: Bearer <token> (standard)
         String header = request.getHeader(HttpHeaders.AUTHORIZATION);
 
         if (header == null || !header.startsWith("Bearer ")) {
-            // No token -> continue (routes protected by Spring Security will still be blocked)
+            // No token -> continue (routes protected by Spring Security will still be
+            // blocked)
             filterChain.doFilter(request, response);
             return;
         }
@@ -66,8 +67,7 @@ public class JwtValidator extends OncePerRequestFilter {
             String email = String.valueOf(claims.get("email"));
             String authorities = String.valueOf(claims.get("authorities"));
 
-            List<GrantedAuthority> auths =
-                    AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
+            List<GrantedAuthority> auths = AuthorityUtils.commaSeparatedStringToAuthorityList(authorities);
 
             Authentication auth = new UsernamePasswordAuthenticationToken(email, null, auths);
             SecurityContextHolder.getContext().setAuthentication(auth);
