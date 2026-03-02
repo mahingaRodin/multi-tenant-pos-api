@@ -13,6 +13,7 @@ import java.util.UUID;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @EqualsAndHashCode
 @Table(name = "users")
 public class User {
@@ -38,7 +39,8 @@ public class User {
     @ManyToOne
     private Branch branch;
 
-    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length=50)
     private EUserRole role;
 
     @Column(nullable = false)

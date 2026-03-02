@@ -10,6 +10,7 @@ import com.msp.payloads.response.AuthResponse;
 import com.msp.repositories.UserRepository;
 import com.msp.services.AuthService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
 import org.springframework.cache.annotation.CacheEvict;
@@ -20,6 +21,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -29,6 +31,7 @@ import java.util.Collection;
 @Service
 @RequiredArgsConstructor
 @CacheConfig(cacheNames = "users")
+@Slf4j
 public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final CustomUserImpl customUserImpl;
@@ -39,9 +42,7 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     @Caching(
-            put = {
-                    @CachePut(key = "#result.user.id")
-            },
+            put = { @CachePut(key = "#result.user.id") },
             evict = {
                     @CacheEvict(value = "users-page", allEntries = true),
                     @CacheEvict(value = "users-by-email", key = "#userDto.email")
@@ -77,44 +78,57 @@ public class AuthServiceImpl implements AuthService {
         authResponse.setUser(UserMapper.toDTO(savedUser));
         return authResponse;
     }
-
     @Override
     @Caching(
-            put = {
-                    @CachePut(key = "#result.user.id")
-            },
-            evict = {
-                    @CacheEvict(value = "users-page", allEntries = true)
-            }
+            put = { @CachePut(key = "#result.user.id") },
+            evict = { @CacheEvict(value = "users-page", allEntries = true) }
     )
     public AuthResponse login(UserDto userDto) {
-        String email = userDto.getEmail();
+        log.info("Login attempt for email: {}", userDto.getEmail());
+
+        // Validate input
+        if (userDto.getEmail() == null || userDto.getEmail().trim().isEmpty()) {
+            throw new UserException("Email cannot be empty");
+        }
+        if (userDto.getPassword() == null || userDto.getPassword().trim().isEmpty()) {
+            throw new UserException("Password cannot be empty");
+        }
+
+        String email = userDto.getEmail().trim();
         String password = userDto.getPassword();
+
         Authentication authentication = authenticate(email, password);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        Collection<? extends GrantedAuthority> authorities = authentication.getAuthorities();
-        String role = authorities.iterator().next().getAuthority();
         String token = provider.generateToken(authentication);
 
+        // Get and update user
         User user = userRepo.findByEmail(email);
-        userRepo.save(user);
+        user.setLastLogin(LocalDateTime.now());
+        user = userRepo.save(user);
 
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
         authResponse.setMessage("Logged In Successfully!");
         authResponse.setUser(UserMapper.toDTO(user));
+
+        log.info("Login successful for: {}", email);
         return authResponse;
     }
 
-    private Authentication authenticate(String email , String password) {
-        UserDetails userDetails = customUserImpl.loadUserByUsername(email);
-        if(userDetails == null) {
-            throw new UserException("Email doesn't exist!: "+email);
+    private Authentication authenticate(String email, String password) {
+        try {
+            UserDetails userDetails = customUserImpl.loadUserByUsername(email);
+
+            if (!passwordEncoder.matches(password, userDetails.getPassword())) {
+                throw new UserException("Password doesn't match!");
+            }
+
+            return new UsernamePasswordAuthenticationToken(
+                    userDetails, null, userDetails.getAuthorities());
+
+        } catch (UsernameNotFoundException e) {
+            throw new UserException("Email doesn't exist: " + email);
         }
-        if(!passwordEncoder.matches(password, userDetails.getPassword())) {
-            throw new UserException("Password doesn't match!");
-        }
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
     }
 }
