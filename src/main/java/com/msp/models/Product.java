@@ -1,7 +1,7 @@
 package com.msp.models;
 
-
 import com.msp.enums.EStoreStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -15,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Table(name = "products")
 public class Product {
     @Id

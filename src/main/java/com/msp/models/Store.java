@@ -1,7 +1,9 @@
 package com.msp.models;
 
 import com.msp.enums.EStoreStatus;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -14,7 +16,9 @@ import java.util.UUID;
 @AllArgsConstructor
 @EqualsAndHashCode
 @Table(name = "stores")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Store {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -70,6 +71,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PostMapping("/store/{storeId}")
     public ResponseEntity<UserDto> createStoreEmployee(
             @Parameter(
@@ -130,6 +132,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @PostMapping("/branch/{branchId}")
     public ResponseEntity<UserDto> createBranchEmployee(
             @Parameter(
@@ -195,6 +198,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @PutMapping("/{id}")
     public ResponseEntity<User> updateEmployee(
             @Parameter(
@@ -260,6 +264,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse2> deleteEmployee(
             @Parameter(
@@ -310,6 +315,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN'")
     @GetMapping("/store/{id}")
     public ResponseEntity<Page<UserDto>> storeEmployee(
             @Parameter(
@@ -368,6 +374,7 @@ public class EmployeeController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @GetMapping("/branch/{id}")
     public ResponseEntity<Page<UserDto>> branchEmployee(
             @Parameter(

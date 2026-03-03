@@ -17,6 +17,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -241,6 +242,7 @@ public class OrderController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/cashier/{id}")
     public ResponseEntity<Page<OrderDto>> getOrderByCashier(
             @Parameter(
@@ -290,6 +292,7 @@ public class OrderController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/today/branch/{id}")
     public ResponseEntity<Page<OrderDto>> getTodayOrder(
             @Parameter(
@@ -339,6 +342,7 @@ public class OrderController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER','ROLE_CUSTOMER')")
     @GetMapping("/customer/{id}")
     public ResponseEntity<Page<OrderDto>> getCustomerOrder(
             @Parameter(
@@ -388,6 +392,7 @@ public class OrderController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/recent/branch/{branchId}")
     public ResponseEntity<Page<OrderDto>> getRecentOrder(
             @Parameter(

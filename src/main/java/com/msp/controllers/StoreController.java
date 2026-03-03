@@ -23,6 +23,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -76,6 +77,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN')")
     @PostMapping
     public ResponseEntity<StoreDto> createStore(
             @Parameter(
@@ -131,6 +133,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/{id}")
     public ResponseEntity<StoreDto> getStoreById(
             @Parameter(
@@ -186,6 +189,7 @@ public class StoreController {
                     content = @Content
             )}
     )
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping
     public ResponseEntity<Page<StoreDto>> getAllStores(
             @Parameter(
@@ -251,6 +255,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/admin")
     public ResponseEntity<StoreDto> getStoreByAdmin(
             @Parameter(
@@ -298,6 +303,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_BRANCH_MANAGER','ROLE_STORE_MANAGER')")
     @GetMapping("/employee")
     public ResponseEntity<StoreDto> getStoreByEmployee(
             @Parameter(
@@ -355,6 +361,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER')")
     @PutMapping("/{id}/update")
     public ResponseEntity<StoreDto> updateStore(
             @Parameter(
@@ -414,6 +421,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER')")
     @PutMapping("/{id}/moderate")
     public ResponseEntity<StoreDto> moderateStore(
             @Parameter(
@@ -480,6 +488,7 @@ public class StoreController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse2> deleteStore(
             @Parameter(

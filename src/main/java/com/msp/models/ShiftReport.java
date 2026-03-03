@@ -1,5 +1,6 @@
 package com.msp.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -14,6 +15,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Table(name = "shift_reports")
 public class ShiftReport {
     @Id

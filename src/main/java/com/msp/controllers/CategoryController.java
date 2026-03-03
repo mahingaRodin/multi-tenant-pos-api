@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -68,6 +69,7 @@ public class CategoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_ADMIN','ROLE_STORE_MANAGER')")
     @PostMapping
     public ResponseEntity<CategoryDto> createCategory(
             @Parameter(
@@ -115,6 +117,7 @@ public class CategoryController {
             )
     })
     @GetMapping("/store/{storeId}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_ADMIN','ROLE_STORE_MANAGER','ROLE_BRANCH_MANAGER','ROLE_BRANCH_CASHIER')")
     public ResponseEntity<Page<CategoryDto>> getCategoriesByStoreId(
             @Parameter(
                     name = "storeId",
@@ -176,6 +179,7 @@ public class CategoryController {
             )
     })
     @PutMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     public ResponseEntity<CategoryDto> updateCategory(
             @Parameter(
                     description = "Updated category details",
@@ -241,6 +245,7 @@ public class CategoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse2> deleteCategory(
             @Parameter(

@@ -1,6 +1,7 @@
 package com.msp.models;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.msp.enums.EPaymentType;
 import jakarta.persistence.*;
 import lombok.*;
@@ -15,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Table(name = "refunds")
 public class Refund {
     @Id

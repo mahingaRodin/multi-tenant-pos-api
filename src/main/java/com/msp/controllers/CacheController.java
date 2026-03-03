@@ -9,6 +9,7 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
@@ -25,6 +26,7 @@ public class CacheController {
     private final RedisTemplate<String, Object> redisTemplate;
 
     @Operation(summary = "Get all cache statistics")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/stats")
     public ResponseEntity<Map<String, Object>> getCacheStats() {
         Map<String, Object> stats = new HashMap<>();
@@ -62,6 +64,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Check specific cache entry")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/check/{cacheName}/{key}")
     public ResponseEntity<Map<String, Object>> checkCacheEntry(
             @PathVariable String cacheName,
@@ -102,6 +105,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Test specific endpoint caching")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/test/{entityType}/{id}")
     public ResponseEntity<Map<String, Object>> testEndpointCache(
             @PathVariable String entityType,
@@ -140,6 +144,7 @@ public class CacheController {
     }
 
     @Operation(summary = "List all keys in a cache")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/keys/{cacheName}")
     public ResponseEntity<Map<String, Object>> listCacheKeys(@PathVariable String cacheName) {
         Map<String, Object> result = new HashMap<>();
@@ -168,6 +173,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Clear specific cache entry")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @DeleteMapping("/clear/{cacheName}/{key}")
     public ResponseEntity<ApiResponse2> clearCacheEntry(
             @PathVariable String cacheName,
@@ -190,6 +196,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Clear all caches")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @DeleteMapping("/clear/all")
     public ResponseEntity<ApiResponse2> clearAllCaches() {
         // Clear via CacheManager
@@ -214,6 +221,7 @@ public class CacheController {
     }
 
     @Operation(summary = "Get cache hit/miss statistics")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN')")
     @GetMapping("/hit-miss")
     public ResponseEntity<Map<String, Object>> getHitMissStats() {
         Map<String, Object> stats = new HashMap<>();

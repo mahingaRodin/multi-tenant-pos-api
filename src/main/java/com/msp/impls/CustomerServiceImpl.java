@@ -1,5 +1,6 @@
 package com.msp.impls;
 
+import com.msp.enums.EUserRole;
 import com.msp.mappers.CustomerMapper;
 import com.msp.models.Customer;
 import com.msp.payloads.dtos.CustomerDto;
@@ -40,6 +41,7 @@ public class CustomerServiceImpl implements CustomerService {
     )
     public CustomerDto createCustomer(CustomerDto dto) throws Exception {
         Customer customer = CustomerMapper.toEntity(dto);
+        customer.setRole(EUserRole.ROLE_CUSTOMER);
         customer.setCreatedAt(LocalDateTime.now());
         customer.setUpdatedAt(LocalDateTime.now());
         return CustomerMapper.toDto(customerRepository.save(customer));

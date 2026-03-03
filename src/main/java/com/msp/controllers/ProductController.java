@@ -18,6 +18,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -71,6 +72,7 @@ public class ProductController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER')")
     @PostMapping
     public ResponseEntity<ProductDto> create(
             @Parameter(
@@ -130,6 +132,7 @@ public class ProductController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_BRANCH_MANAGER')")
     @GetMapping("/store/{storeId}")
     public ResponseEntity<Page<ProductDto>> getAllProducts(
             @Parameter(
@@ -179,6 +182,7 @@ public class ProductController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_BRANCH_MANAGER')")
     @GetMapping("/store/{storeId}/search")
     public ResponseEntity<Page<ProductDto>> searchByKeyword(
             @Parameter(
@@ -262,6 +266,7 @@ public class ProductController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_BRANCH_MANAGER')")
     @PatchMapping("/{id}")
     public ResponseEntity<ProductDto> update(
             @Parameter(
@@ -339,6 +344,7 @@ public class ProductController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_STORE_ADMIN','ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_BRANCH_MANAGER')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse2> deleteProduct(
             @Parameter(

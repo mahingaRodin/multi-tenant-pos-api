@@ -1,6 +1,8 @@
 package com.msp.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -16,7 +18,9 @@ import java.util.UUID;
 @Builder
 @EqualsAndHashCode
 @Table(name = "branches")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Branch {
+
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;

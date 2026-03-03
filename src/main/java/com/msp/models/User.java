@@ -1,7 +1,9 @@
 package com.msp.models;
 
 import com.msp.enums.EUserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
+
 import jakarta.validation.constraints.Email;
 import lombok.*;
 
@@ -16,6 +18,7 @@ import java.util.UUID;
 @Builder
 @EqualsAndHashCode
 @Table(name = "users")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class User {
 
     @Id
@@ -29,7 +32,7 @@ public class User {
     private String lastName;
 
     @Column(nullable = false)
-    @Email(message= "Email Should be valid!")
+    @Email(message = "Email Should be valid!")
     private String email;
     private String phone;
 
@@ -40,7 +43,7 @@ public class User {
     private Branch branch;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length=50)
+    @Column(nullable = false, length = 50)
     private EUserRole role;
 
     @Column(nullable = false)

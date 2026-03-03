@@ -1,5 +1,7 @@
 package com.msp.models;
 
+import com.msp.enums.EUserRole;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import lombok.*;
@@ -14,6 +16,7 @@ import java.util.UUID;
 @AllArgsConstructor
 @Builder
 @EqualsAndHashCode
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 @Table(name = "customers")
 public class Customer {
     @Id
@@ -28,6 +31,10 @@ public class Customer {
     @Column(nullable = false)
     @Email(message = "Email Should Be Valid!")
     private String email;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 50)
+    private EUserRole role;
 
     private String phone;
 

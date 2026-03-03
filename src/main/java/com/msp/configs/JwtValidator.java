@@ -74,9 +74,17 @@ public class JwtValidator extends OncePerRequestFilter {
             SecurityContextHolder.getContext().setAuthentication(auth);
 
             filterChain.doFilter(request, response);
-        } catch (Exception e) {
+        } catch (io.jsonwebtoken.JwtException e) {
             SecurityContextHolder.clearContext();
-            throw new BadCredentialsException("Invalid JWT...", e);
+            throw new BadCredentialsException("Invalid JWT token: " + e.getMessage(), e);
+        } catch (IllegalArgumentException e) {
+            // This might happen if JWT is empty or malformed in a specific way
+            SecurityContextHolder.clearContext();
+            throw new BadCredentialsException("Malformed JWT token", e);
+        } catch (Exception e) {
+            // ALL other exceptions (including SerializationException from downstream)
+            // MUST be re-thrown without being wrapped in BadCredentialsException
+            throw e;
         }
     }
 }

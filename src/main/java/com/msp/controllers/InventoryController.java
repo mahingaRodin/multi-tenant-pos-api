@@ -16,6 +16,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -73,6 +74,7 @@ public class InventoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PostMapping
     public ResponseEntity<InventoryDto> createInventory(
             @Parameter(
@@ -125,6 +127,7 @@ public class InventoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @PutMapping("/{id}")
     public ResponseEntity<InventoryDto> updateInventory(
             @Parameter(
@@ -185,6 +188,7 @@ public class InventoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN')")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiResponse2> deleteInventory(
             @Parameter(
@@ -235,6 +239,7 @@ public class InventoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @GetMapping("/branch/{branchId}/product/{productId}")
     public ResponseEntity<InventoryDto> getInventoryByProductAndBranchId(
             @Parameter(
@@ -292,6 +297,7 @@ public class InventoryController {
                     content = @Content
             )
     })
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_MANAGER','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER')")
     @GetMapping("/branch/{branchId}")
     public ResponseEntity<Page<InventoryDto>> getInventoryBranch(
             @Parameter(
