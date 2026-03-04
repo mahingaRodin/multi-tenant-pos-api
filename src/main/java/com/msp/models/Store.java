@@ -27,6 +27,7 @@ public class Store {
     private String brand;
 
     @OneToOne
+    @JsonIgnoreProperties({ "store", "branch", "password" })
     private User storeAdmin;
 
     private LocalDateTime createdAt;

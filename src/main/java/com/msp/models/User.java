@@ -37,9 +37,11 @@ public class User {
     private String phone;
 
     @ManyToOne
+    @JsonIgnoreProperties({ "storeAdmin" })
     private Store store;
 
     @ManyToOne
+    @JsonIgnoreProperties({ "manager", "store" })
     private Branch branch;
 
     @Enumerated(EnumType.STRING)

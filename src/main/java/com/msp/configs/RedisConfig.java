@@ -8,7 +8,8 @@ import com.fasterxml.jackson.databind.jsontype.PolymorphicTypeValidator;
 import com.fasterxml.jackson.databind.module.SimpleModule;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.datatype.hibernate7.Hibernate7Module;
-
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
+import org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode;
 import org.springframework.cache.CacheManager;
 import org.springframework.cache.annotation.EnableCaching;
 import org.springframework.context.annotation.Bean;
@@ -33,6 +34,7 @@ import java.util.List;
 
 @EnableCaching
 @Configuration
+@EnableSpringDataWebSupport(pageSerializationMode = PageSerializationMode.VIA_DTO)
 public class RedisConfig {
 
     @Bean
@@ -70,16 +72,22 @@ public class RedisConfig {
                 .allowIfBaseType(Object.class)
                 .build();
 
+        Hibernate7Module hibernateModule = new Hibernate7Module();
+        // Prevent Jackson from forcing lazy-loaded relations to load during caching
+        hibernateModule.disable(Hibernate7Module.Feature.FORCE_LAZY_LOADING);
+
         ObjectMapper mapper = JsonMapper.builder()
                 .addModule(new JavaTimeModule())
-                .addModule(new Hibernate7Module())
+                .addModule(hibernateModule)
                 .addModule(new SimpleModule("PageModule")
-
-                        .addDeserializer(Page.class, new PageDeserializer()))
+                        .addDeserializer(Page.class, new PageDeserializer())
+                        .addDeserializer(PageImpl.class, new PageImplDeserializer()))
                 .activateDefaultTypingAsProperty(
                         ptv,
                         ObjectMapper.DefaultTyping.NON_FINAL,
                         "@class")
+                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
+                .disable(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS)
                 .build();
 
         return new JacksonRedisSerializer(mapper);
@@ -125,33 +133,41 @@ public class RedisConfig {
         @Override
         public Page<?> deserialize(JsonParser p, DeserializationContext ctxt)
                 throws IOException {
-            JsonNode node = p.getCodec().readTree(p);
+            ObjectMapper mapper = (ObjectMapper) p.getCodec();
+            JsonNode node = mapper.readTree(p);
 
             // Get content
             JsonNode contentNode = node.get("content");
             List<Object> content = new ArrayList<>();
-            if (contentNode != null && contentNode.isArray()) {
-                for (JsonNode item : contentNode) {
-                    try {
-                        // Try to deserialize with type information
-                        if (item.has("@class")) {
-                            content.add(ctxt.readTreeAsValue(item, Object.class));
-                        } else {
-                            content.add(ctxt.readTreeAsValue(item, Object.class));
-                        }
-                    } catch (Exception e) {
-                        // Fallback to raw JSON node
-                        content.add(item);
-                    }
+            if (contentNode != null) {
+                // Let Jackson deserializer figure out the types based on @class properties
+                Object parsedContent = mapper.treeToValue(contentNode, Object.class);
+                if (parsedContent instanceof List) {
+                    content = (List<Object>) parsedContent;
                 }
             }
 
             // Get page info
             int number = node.has("number") ? node.get("number").asInt() : 0;
+            if (node.has("pageable") && node.get("pageable").has("pageNumber")) {
+                number = node.get("pageable").get("pageNumber").asInt();
+            }
+
             int size = node.has("size") ? node.get("size").asInt() : (content.isEmpty() ? 10 : content.size());
+            if (node.has("pageable") && node.get("pageable").has("pageSize")) {
+                size = node.get("pageable").get("pageSize").asInt();
+            }
+
             long totalElements = node.has("totalElements") ? node.get("totalElements").asLong() : content.size();
 
             return new PageImpl<>(content, PageRequest.of(number, Math.max(size, 1)), totalElements);
+        }
+    }
+
+    public static class PageImplDeserializer extends JsonDeserializer<PageImpl<?>> {
+        @Override
+        public PageImpl<?> deserialize(JsonParser p, DeserializationContext ctxt) throws IOException {
+            return (PageImpl<?>) new PageDeserializer().deserialize(p, ctxt);
         }
     }
 }

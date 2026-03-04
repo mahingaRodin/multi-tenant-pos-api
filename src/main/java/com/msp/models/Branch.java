@@ -40,9 +40,11 @@ public class Branch {
     private LocalDateTime updatedAt;
 
     @ManyToOne
+    @JsonIgnoreProperties({ "storeAdmin", "branch", "contact" })
     private Store store;
 
     @OneToOne
+    @JsonIgnoreProperties({ "branch", "store", "password" })
     private User manager;
 
     @PrePersist
