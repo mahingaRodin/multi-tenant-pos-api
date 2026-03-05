@@ -17,7 +17,7 @@ spec:
     spec:
       containers:
         - name: pos-backend
-          image: headie1/pos-backend:0.0.5
+          image: headie1/pos-backend:0.0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 5000
