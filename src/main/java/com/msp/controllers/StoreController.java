@@ -95,8 +95,8 @@ public class StoreController {
                 Sort sort = Sort.by(Sort.Direction.fromString(direction), "createdAt");
                 Pageable pageable = PageRequest.of(page, size, sort);
 
-                Page<StoreDto> shiftReports = storeService.getAllStores(pageable);
-                return ResponseEntity.ok(shiftReports);
+                Page<StoreDto> stores = storeService.getAllStores(pageable);
+                return ResponseEntity.ok(stores);
         }
 
         @Operation(summary = "Get store by admin", description = "Retrieves the store associated with the currently authenticated admin user")

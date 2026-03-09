@@ -6,6 +6,9 @@ import com.msp.payloads.dtos.StoreDto;
 
 public class StoreMapper {
     public static StoreDto toDto(Store store) {
+        if (store == null) {
+            return null;
+        }
         StoreDto storeDto = new StoreDto();
         storeDto.setId(store.getId());
         storeDto.setBrand(store.getBrand());

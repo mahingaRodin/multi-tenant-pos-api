@@ -33,28 +33,23 @@ public class UserServiceImpl implements UserService {
     public User getCurrentUserFromToken(String token) throws UserException {
         String email = provider.getEmailFromToken(token);
         User user = userRepo.findByEmail(email);
-        if(user == null) {
+        if (user == null) {
             throw new UserException("Invalid Token!");
         }
         return user;
     }
 
     @Override
-    @Cacheable(value = "users-current", key = "#result.email")
     public User getCurrentUser() throws UserException {
         String email = SecurityContextHolder.getContext().getAuthentication().getName();
-        User user = userRepo.findByEmail(email);
-        if(user == null) {
-            throw new UserException("User Not Found!");
-        }
-        return user;
+        return getUserByEmail(email);
     }
 
     @Override
     @Cacheable(key = "#email")
     public User getUserByEmail(String email) throws UserException {
         User user = userRepo.findByEmail(email);
-        if(user == null) {
+        if (user == null) {
             throw new UserException("User Not Found!");
         }
         return user;

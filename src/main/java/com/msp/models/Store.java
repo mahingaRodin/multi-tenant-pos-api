@@ -26,7 +26,8 @@ public class Store {
     @Column(nullable = false)
     private String brand;
 
-    @OneToOne
+    @ManyToOne
+    @JoinColumn(name = "store_admin_id", nullable = false)
     @JsonIgnoreProperties({ "store", "branch", "password" })
     private User storeAdmin;
 

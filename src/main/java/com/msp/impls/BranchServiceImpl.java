@@ -43,7 +43,16 @@ public class BranchServiceImpl implements BranchService {
         })
         public BranchDto createBranch(BranchDto branchDto) {
                 User currentUser = userService.getCurrentUser();
-                Store store = storeRepo.findByStoreAdminId(currentUser.getId());
+                Store store;
+
+                boolean isSuperAdmin = currentUser.getRole() == com.msp.enums.EUserRole.ROLE_SUPER_ADMIN;
+
+                if (isSuperAdmin && branchDto.getStoreId() != null) {
+                        store = storeRepo.findById(branchDto.getStoreId()).orElse(null);
+                } else {
+                        store = storeRepo.findByStoreAdminId(currentUser.getId());
+                }
+
                 Branch branch = BranchMapper.toEntity(branchDto, store);
                 Branch savedBranch = branchRepo.save(branch);
                 return BranchMapper.toDto(savedBranch);

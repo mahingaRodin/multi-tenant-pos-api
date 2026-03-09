@@ -16,7 +16,7 @@ public interface StoreService {
     Page<StoreDto> getAllStores(Pageable pageable);
     Store getStoreByAdmin();
     StoreDto updateStore(UUID id, StoreDto storeDto) throws Exception;
-    void deleteStore(UUID id);
+    void deleteStore(UUID id) throws Exception;
     StoreDto getStoreByEmployee();
     StoreDto moderateStore(UUID id, EStoreStatus status) throws Exception;
 }

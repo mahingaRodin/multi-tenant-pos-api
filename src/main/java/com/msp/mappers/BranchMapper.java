@@ -6,6 +6,9 @@ import com.msp.payloads.dtos.BranchDto;
 
 public class BranchMapper {
     public static BranchDto toDto(Branch branch) {
+        if (branch == null) {
+            return null;
+        }
         return BranchDto.builder()
                 .id(branch.getId())
                 .name(branch.getName())
@@ -17,7 +20,7 @@ public class BranchMapper {
                 .closeTime(branch.getCloseTime())
                 .createdAt(branch.getCreatedAt())
                 .updatedAt(branch.getUpdatedAt())
-                .storeId(branch.getStore()!=null?branch.getStore().getId():null)
+                .storeId(branch.getStore() != null ? branch.getStore().getId() : null)
                 .build();
     }
 
