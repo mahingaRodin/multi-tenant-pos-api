@@ -18,7 +18,9 @@ import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.UUID;
@@ -48,7 +50,7 @@ public class StoreServiceImpl implements StoreService {
         @Cacheable(key = "#id")
         public StoreDto getStoreById(UUID id) throws Exception {
                 Store store = storeRepo.findById(id).orElseThrow(
-                                () -> new Exception("Store Not Found!"));
+                                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Store Not Found!"));
                 return StoreMapper.toDto(store);
         }
 
@@ -76,14 +78,14 @@ public class StoreServiceImpl implements StoreService {
         public StoreDto updateStore(UUID id, StoreDto storeDto) throws Exception {
                 User currentUser = userService.getCurrentUser();
                 Store existing = storeRepo.findById(id).orElseThrow(
-                                () -> new Exception("Store Not Found!"));
+                                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Store Not Found!"));
 
                 // Permission check: current user must be either super_admin or the specific
                 // store_admin
                 boolean isSuperAdmin = currentUser.getRole() == com.msp.enums.EUserRole.ROLE_SUPER_ADMIN;
 
                 if (!isSuperAdmin && !existing.getStoreAdmin().getId().equals(currentUser.getId())) {
-                        throw new Exception("You don't have permission to update this store!");
+                        throw new ResponseStatusException(HttpStatus.FORBIDDEN, "You don't have permission to update this store!");
                 }
 
                 existing.setBrand(storeDto.getBrand());
