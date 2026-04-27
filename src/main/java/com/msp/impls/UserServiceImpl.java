@@ -2,6 +2,7 @@ package com.msp.impls;
 
 import com.msp.configs.JwtProvider;
 import com.msp.enums.EUserRole;
+import com.msp.enums.EUserStatus;
 import com.msp.exceptions.UserException;
 import com.msp.mappers.UserMapper;
 import com.msp.models.User;
@@ -22,7 +23,9 @@ import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Service
@@ -37,15 +40,17 @@ public class UserServiceImpl implements UserService {
     @Override
     @CacheEvict(value = "users-page", allEntries = true)
     public User createUser(UserDto dto) throws UserException {
-        // Check if email exists
         User existing = userRepo.findByEmail(dto.getEmail());
         if (existing != null) {
             throw new UserException("Email already exists!");
         }
 
         User user = UserMapper.toEntity(dto);
-        user.setId(null); // Ensure new ID
+        user.setId(null);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        user.setUserStatus(EUserStatus.ACTIVE);
+        user.setCreatedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
         return userRepo.save(user);
     }
 
@@ -56,6 +61,10 @@ public class UserServiceImpl implements UserService {
         User user = userRepo.findByEmail(email);
         if (user == null) {
             throw new UserException("Invalid Token!");
+        }
+        // Check status on login
+        if (user.getUserStatus() != EUserStatus.ACTIVE) {
+            throw new UserException("Account is " + user.getUserStatus().toString().toLowerCase());
         }
         return user;
     }
@@ -83,9 +92,13 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    @Cacheable(value = "users-page", key = "#page + '-' + #size + '-' + #sortBy")
-    public Page<UserDto> getAllUsers(int page, int size, String sortBy) {
+    @Cacheable(value = "users-page", key = "#page + '-' + #size + '-' + #sortBy + '-' + #status")
+    public Page<UserDto> getAllUsers(int page, int size, String sortBy, EUserStatus status) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
+
+        if (status != null) {
+            return userRepo.findByUserStatus(status, pageable).map(UserMapper::toDTO);
+        }
         return userRepo.findAll(pageable).map(UserMapper::toDTO);
     }
 
@@ -96,11 +109,9 @@ public class UserServiceImpl implements UserService {
         User existing = userRepo.findById(id)
                 .orElseThrow(() -> new UserException("User not found!"));
 
-        // Update fields
         if (dto.getFirstName() != null) existing.setFirstName(dto.getFirstName());
         if (dto.getLastName() != null) existing.setLastName(dto.getLastName());
         if (dto.getEmail() != null && !dto.getEmail().equals(existing.getEmail())) {
-            // Check if new email is taken
             User check = userRepo.findByEmail(dto.getEmail());
             if (check != null) {
                 throw new UserException("Email already in use!");
@@ -110,14 +121,92 @@ public class UserServiceImpl implements UserService {
         if (dto.getPhone() != null) existing.setPhone(dto.getPhone());
         if (dto.getRole() != null) existing.setRole(EUserRole.valueOf(dto.getRole()));
 
+        existing.setUpdatedAt(LocalDateTime.now());
+
         return userRepo.save(existing);
     }
 
     @Override
+    @Transactional
+    @CachePut(key = "#id")
+    @CacheEvict(value = {"users-by-token", "users-page"}, allEntries = true)
+    public User dischargeUser(UUID id, String reason) throws UserException {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new UserException("User not found!"));
+
+        if (user.getUserStatus() == EUserStatus.DISCHARGED) {
+            throw new UserException("User is already discharged!");
+        }
+
+        user.setUserStatus(EUserStatus.DISCHARGED);
+        user.setDischargedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return userRepo.save(user);
+    }
+
+    @Override
+    @Transactional
+    @CachePut(key = "#id")
+    @CacheEvict(value = {"users-by-token", "users-page"}, allEntries = true)
+    public User suspendUser(UUID id, String reason) throws UserException {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new UserException("User not found!"));
+
+        if (user.getUserStatus() == EUserStatus.DISCHARGED) {
+            throw new UserException("Cannot suspend a discharged user!");
+        }
+        if (user.getUserStatus() == EUserStatus.SUSPENDED) {
+            throw new UserException("User is already suspended!");
+        }
+
+        user.setUserStatus(EUserStatus.SUSPENDED);
+        user.setSuspendedAt(LocalDateTime.now());
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return userRepo.save(user);
+    }
+
+    @Override
+    @Transactional
+    @CachePut(key = "#id")
+    @CacheEvict(value = {"users-by-token", "users-page"}, allEntries = true)
+    public User activateUser(UUID id) throws UserException {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new UserException("User not found!"));
+
+        if (user.getUserStatus() == EUserStatus.DISCHARGED) {
+            throw new UserException("Cannot reactivate a discharged user!");
+        }
+        if (user.getUserStatus() == EUserStatus.ACTIVE) {
+            throw new UserException("User is already active!");
+        }
+
+        user.setUserStatus(EUserStatus.ACTIVE);
+        user.setSuspendedAt(null);
+        user.setUpdatedAt(LocalDateTime.now());
+
+        return userRepo.save(user);
+    }
+
+    @Override
+    public boolean canDeleteUser(UUID id) {
+        User user = userRepo.findById(id).orElse(null);
+        if (user == null) return false;
+        return user.getStore() == null && user.getBranch() == null;
+    }
+
+    @Override
+    @Transactional
     @CacheEvict(value = {"users", "users-by-token", "users-page"}, allEntries = true)
     public void deleteUser(UUID id) throws UserException {
         User user = userRepo.findById(id)
                 .orElseThrow(() -> new UserException("User not found!"));
+
+        if (user.getStore() != null || user.getBranch() != null) {
+            throw new UserException("Cannot delete user assigned to store or branch. Use discharge instead.");
+        }
+
         userRepo.delete(user);
     }
 }

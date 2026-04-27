@@ -2,6 +2,7 @@ package com.msp.models;
 
 import com.msp.enums.EUserRole;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.msp.enums.EUserStatus;
 import jakarta.persistence.*;
 
 import jakarta.validation.constraints.Email;
@@ -51,6 +52,13 @@ public class User {
 
     @Column(nullable = false)
     private String password;
+
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private EUserStatus userStatus = EUserStatus.ACTIVE;
+    
+    private LocalDateTime suspendedAt;
+    private LocalDateTime dischargedAt;
 
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
