@@ -13,10 +13,12 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -236,20 +238,19 @@ public class UserController {
         return ResponseEntity.noContent().build();
     }
 
-    // ASSIGN ROLE (Bonus endpoint)
-    @Operation(summary = "Assign role to user", description = "Changes a user's role. Requires SUPER_ADMIN role.")
-    @ApiResponses({
-            @ApiResponse(responseCode = "200", description = "Role assigned successfully"),
-            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
-            @ApiResponse(responseCode = "404", description = "User not found")
-    })
-    @PatchMapping("/{id}/role")
-    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
-    public ResponseEntity<UserDto> assignRole(
-            @PathVariable UUID id,
-            @RequestParam String role
-    ) throws UserException {
-        User updated = userService.assignRole(id, role);
-        return ResponseEntity.ok(UserMapper.toDTO(updated));
-    }
+//    @Operation(summary = "Assign role to user", description = "Changes a user's role. Requires SUPER_ADMIN role.")
+//    @ApiResponses({
+//            @ApiResponse(responseCode = "200", description = "Role assigned successfully"),
+//            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
+//            @ApiResponse(responseCode = "404", description = "User not found")
+//    })
+//    @PatchMapping("/{id}/role")
+//    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+//    public ResponseEntity<UserDto> assignRole(
+//            @PathVariable UUID id,
+//            @RequestParam String role
+//    ) throws UserException {
+//        User updated = userService.assignRole(id, role);
+//        return ResponseEntity.ok(UserMapper.toDTO(updated));
+//    }
 }
