@@ -3,6 +3,7 @@ package com.msp.controllers;
 import com.msp.exceptions.UserException;
 import com.msp.mappers.UserMapper;
 import com.msp.models.User;
+import com.msp.payloads.dtos.UpdateUserDto;
 import com.msp.payloads.dtos.UserDto;
 import com.msp.services.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -216,7 +217,7 @@ public class UserController {
     @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable UUID id,
-            @RequestBody @Valid UserDto userDto
+            @RequestBody @Valid UpdateUserDto userDto
     ) throws UserException {
         User updated = userService.updateUser(id, userDto);
         return ResponseEntity.ok(UserMapper.toDTO(updated));

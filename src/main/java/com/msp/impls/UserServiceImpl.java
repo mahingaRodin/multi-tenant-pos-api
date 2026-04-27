@@ -1,9 +1,11 @@
 package com.msp.impls;
 
 import com.msp.configs.JwtProvider;
+import com.msp.enums.EUserRole;
 import com.msp.exceptions.UserException;
 import com.msp.mappers.UserMapper;
 import com.msp.models.User;
+import com.msp.payloads.dtos.UpdateUserDto;
 import com.msp.payloads.dtos.UserDto;
 import com.msp.repositories.UserRepository;
 import com.msp.services.UserService;
@@ -90,7 +92,7 @@ public class UserServiceImpl implements UserService {
     @Override
     @CachePut(key = "#id")
     @CacheEvict(value = {"users-by-token", "users-page"}, allEntries = true)
-    public User updateUser(UUID id, UserDto dto) throws UserException {
+    public User updateUser(UUID id, UpdateUserDto dto) throws UserException {
         User existing = userRepo.findById(id)
                 .orElseThrow(() -> new UserException("User not found!"));
 
@@ -106,12 +108,7 @@ public class UserServiceImpl implements UserService {
             existing.setEmail(dto.getEmail());
         }
         if (dto.getPhone() != null) existing.setPhone(dto.getPhone());
-        if (dto.getRole() != null) existing.setRole(dto.getRole());
-
-        // Update password only if provided
-        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
-            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
-        }
+        if (dto.getRole() != null) existing.setRole(EUserRole.valueOf(dto.getRole()));
 
         return userRepo.save(existing);
     }
