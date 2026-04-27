@@ -407,4 +407,67 @@ public class OrderController {
     ) throws Exception {
         return ResponseEntity.ok(orderService.getTop5RecentOrdersByBranchId(branchId,page,size));
     }
+
+    @Operation(summary = "Get all orders", description = "Retrieves paginated list of all orders across all branches. Requires SUPER_ADMIN.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Orders retrieved successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden")
+    })
+    @GetMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Page<OrderDto>> getAllOrders(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) throws Exception {
+        return ResponseEntity.ok(orderService.getAllOrders(page, size));
+    }
+
+    @Operation(summary = "Update order", description = "Updates an existing order. Requires SUPER_ADMIN or STORE_ADMIN.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Order updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid order data"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasAnyRole('ROLE_SUPER_ADMIN', 'ROLE_STORE_ADMIN')")
+    public ResponseEntity<OrderDto> updateOrder(
+            @PathVariable UUID id,
+            @Valid @RequestBody OrderDto orderDto
+    ) throws Exception {
+        return ResponseEntity.ok(orderService.updateOrder(id, orderDto));
+    }
+
+    @Operation(summary = "Update order status", description = "Updates only the status of an order")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Status updated successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    @PatchMapping("/{id}/status")
+    @PreAuthorize("hasAnyAuthority('ROLE_SUPER_ADMIN','ROLE_STORE_ADMIN','ROLE_BRANCH_MANAGER','ROLE_BRANCH_CASHIER')")
+    public ResponseEntity<OrderDto> updateOrderStatus(
+            @PathVariable UUID id,
+            @RequestParam EOrderStatus status
+    ) throws Exception {
+        return ResponseEntity.ok(orderService.updateOrderStatus(id, status));
+    }
+
+    @Operation(summary = "Delete order", description = "Deletes an order by ID. Requires SUPER_ADMIN.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "Order deleted successfully"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "404", description = "Order not found")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Void> deleteOrder(
+            @PathVariable UUID id
+    ) throws Exception {
+        orderService.deleteOrder(id);
+        return ResponseEntity.noContent().build();
+    }
 }

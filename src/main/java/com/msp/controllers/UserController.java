@@ -184,4 +184,72 @@ public class UserController {
         }
         return ResponseEntity.ok(UserMapper.toDTO(user));
     }
+
+    // CREATE
+    @Operation(summary = "Create new user", description = "Creates a new user account. Requires SUPER_ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "201", description = "User created successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
+            @ApiResponse(responseCode = "409", description = "Email already exists")
+    })
+    @PostMapping
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<UserDto> createUser(
+            @RequestBody @Valid UserDto userDto
+    ) throws UserException {
+        User created = userService.createUser(userDto);
+        return ResponseEntity.status(HttpStatus.CREATED).body(UserMapper.toDTO(created));
+    }
+
+    // UPDATE
+    @Operation(summary = "Update user", description = "Updates an existing user's information. Requires SUPER_ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "User updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid input data"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PutMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<UserDto> updateUser(
+            @PathVariable UUID id,
+            @RequestBody @Valid UserDto userDto
+    ) throws UserException {
+        User updated = userService.updateUser(id, userDto);
+        return ResponseEntity.ok(UserMapper.toDTO(updated));
+    }
+
+    // DELETE
+    @Operation(summary = "Delete user", description = "Deletes a user by ID. Requires SUPER_ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204", description = "User deleted successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<Void> deleteUser(
+            @PathVariable UUID id
+    ) throws UserException {
+        userService.deleteUser(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ASSIGN ROLE (Bonus endpoint)
+    @Operation(summary = "Assign role to user", description = "Changes a user's role. Requires SUPER_ADMIN role.")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Role assigned successfully"),
+            @ApiResponse(responseCode = "403", description = "Forbidden - Requires SUPER_ADMIN"),
+            @ApiResponse(responseCode = "404", description = "User not found")
+    })
+    @PatchMapping("/{id}/role")
+    @PreAuthorize("hasRole('ROLE_SUPER_ADMIN')")
+    public ResponseEntity<UserDto> assignRole(
+            @PathVariable UUID id,
+            @RequestParam String role
+    ) throws UserException {
+        User updated = userService.assignRole(id, role);
+        return ResponseEntity.ok(UserMapper.toDTO(updated));
+    }
 }

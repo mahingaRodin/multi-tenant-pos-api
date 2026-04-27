@@ -10,12 +10,15 @@ import com.msp.services.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.CachePut;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -27,6 +30,22 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private final UserRepository userRepo;
     private final JwtProvider provider;
+    private final PasswordEncoder passwordEncoder;
+
+    @Override
+    @CacheEvict(value = "users-page", allEntries = true)
+    public User createUser(UserDto dto) throws UserException {
+        // Check if email exists
+        User existing = userRepo.findByEmail(dto.getEmail());
+        if (existing != null) {
+            throw new UserException("Email already exists!");
+        }
+
+        User user = UserMapper.toEntity(dto);
+        user.setId(null); // Ensure new ID
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+        return userRepo.save(user);
+    }
 
     @Override
     @Cacheable(value = "users-by-token", key = "#token")
@@ -66,5 +85,42 @@ public class UserServiceImpl implements UserService {
     public Page<UserDto> getAllUsers(int page, int size, String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return userRepo.findAll(pageable).map(UserMapper::toDTO);
+    }
+
+    @Override
+    @CachePut(key = "#id")
+    @CacheEvict(value = {"users-by-token", "users-page"}, allEntries = true)
+    public User updateUser(UUID id, UserDto dto) throws UserException {
+        User existing = userRepo.findById(id)
+                .orElseThrow(() -> new UserException("User not found!"));
+
+        // Update fields
+        if (dto.getFirstName() != null) existing.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) existing.setLastName(dto.getLastName());
+        if (dto.getEmail() != null && !dto.getEmail().equals(existing.getEmail())) {
+            // Check if new email is taken
+            User check = userRepo.findByEmail(dto.getEmail());
+            if (check != null) {
+                throw new UserException("Email already in use!");
+            }
+            existing.setEmail(dto.getEmail());
+        }
+        if (dto.getPhone() != null) existing.setPhone(dto.getPhone());
+        if (dto.getRole() != null) existing.setRole(dto.getRole());
+
+        // Update password only if provided
+        if (dto.getPassword() != null && !dto.getPassword().isEmpty()) {
+            existing.setPassword(passwordEncoder.encode(dto.getPassword()));
+        }
+
+        return userRepo.save(existing);
+    }
+
+    @Override
+    @CacheEvict(value = {"users", "users-by-token", "users-page"}, allEntries = true)
+    public void deleteUser(UUID id) throws UserException {
+        User user = userRepo.findById(id)
+                .orElseThrow(() -> new UserException("User not found!"));
+        userRepo.delete(user);
     }
 }

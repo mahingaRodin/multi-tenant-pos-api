@@ -24,4 +24,7 @@ public interface OrderService {
     Page<OrderDto> getTodayOrderByBranch(UUID branchId, int page, int size) throws Exception;
     Page<OrderDto> getOrderByCustomerId(UUID customerId,int page, int size) throws Exception;
     Page<OrderDto> getTop5RecentOrdersByBranchId(UUID branchId, int page, int size) throws Exception;
+    Page<OrderDto> getAllOrders(int page, int size) throws Exception;
+    OrderDto updateOrder(UUID id, OrderDto orderDto) throws Exception;
+    OrderDto updateOrderStatus(UUID id, EOrderStatus status) throws Exception;
 }
