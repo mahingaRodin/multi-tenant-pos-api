@@ -1,18 +1,63 @@
+# Main ingress — all API traffic (HTTP auto-redirects to HTTPS)
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: pos-backend
   namespace: pos
   annotations:
-    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
 spec:
   ingressClassName: nginx
+  tls:
+    - hosts:
+        - pos.5.180.181.195.nip.io
+      secretName: pos-backend-tls
   rules:
     - host: pos.5.180.181.195.nip.io
       http:
         paths:
           - path: /msp(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: pos-backend
+                port:
+                  number: 80
+---
+# Swagger ingress — same host, locked behind basic auth
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: pos-swagger
+  namespace: pos
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/auth-type: basic
+    nginx.ingress.kubernetes.io/auth-secret: swagger-basic-auth
+    nginx.ingress.kubernetes.io/auth-realm: "Authorized Personnel Only"
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts:
+        - pos.5.180.181.195.nip.io
+      secretName: pos-backend-tls
+  rules:
+    - host: pos.5.180.181.195.nip.io
+      http:
+        paths:
+          - path: /msp/swagger-ui(/|$)(.*)
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: pos-backend
+                port:
+                  number: 80
+          - path: /msp/v3/api-docs(/|$)(.*)
             pathType: ImplementationSpecific
             backend:
               service:
