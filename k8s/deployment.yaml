@@ -37,14 +37,12 @@ spec:
                 secretKeyRef:
                   name: pos-db-secret
                   key: password
-            # Redis Configuration
             - name: SPRING_REDIS_HOST
               value: "redis-service"
             - name: SPRING_REDIS_PORT
               value: "6379"
             - name: SPRING_CACHE_TYPE
               value: "redis"
-            # JWT Secret
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
