@@ -48,8 +48,8 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            echo "Successfully connected to Kamatera!"
-            echo "Deploying to Kamatera..."
+            echo "Successfully connected to Kamatera_Server!"
+            echo "Deploying to KamateraServer..."
             echo "Updating deployment with new image..."
             
             kubectl set image deployment/pos-backend pos-backend=${{ env.IMAGE }}:${{ github.sha }} -n pos
