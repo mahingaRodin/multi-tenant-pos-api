@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 
 import jakarta.validation.constraints.Email;
 import lombok.*;
+import org.hibernate.annotations.ColumnDefault;
 
 import java.time.LocalDateTime;
 import java.util.UUID;
@@ -55,7 +56,8 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    private EUserStatus userStatus = EUserStatus.ACTIVE;
+    @ColumnDefault("'ACTIVE")
+    private EUserStatus userStatus;
     
     private LocalDateTime suspendedAt;
     private LocalDateTime dischargedAt;
