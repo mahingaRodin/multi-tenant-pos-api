@@ -72,6 +72,6 @@ jobs:
             kubectl set image deployment/pos-backend \
               pos-backend=${{ env.IMAGE }}:${{ github.sha }} -n pos
             
-            kubectl rollout status deployment/pos-backend -n pos --timeout=120s
+            kubectl rollout status deployment/pos-backend -n pos
             
             echo "✅ Deploy complete"
