@@ -35,14 +35,12 @@ public class DataInitializer implements CommandLineRunner {
         log.info("=== Starting Data Initialization ===");
 
         try {
-            // 1. Initialize or Fetch Admin
             String adminEmail = "mahingarodin@gmail.com";
             User adminUser = userRepository.findByEmail(adminEmail);
 
             if (adminUser == null) {
                 log.info("Creating new admin user...");
                 adminUser = User.builder()
-                        // REMOVED: .id(UUID.randomUUID()) - Let Hibernate generate it
                         .email(adminEmail)
                         .password(passwordEncoder.encode("admin!123"))
                         .firstName("Mahinga")
@@ -55,8 +53,6 @@ public class DataInitializer implements CommandLineRunner {
                         .build();
                 adminUser = userRepository.save(adminUser);
             }
-
-            // 2. Initialize or Fetch Store
             Store defaultStore;
             List<Store> existingStores = storeRepository.findAll();
             if (existingStores.isEmpty()) {
@@ -74,8 +70,6 @@ public class DataInitializer implements CommandLineRunner {
                     defaultStore.setStoreAdmin(adminUser);
                 }
             }
-
-            // 3. Initialize or Fetch Branch
             Branch defaultBranch;
             List<Branch> existingBranches = branchRepository.findAll();
             if (existingBranches.isEmpty()) {
@@ -97,8 +91,6 @@ public class DataInitializer implements CommandLineRunner {
                     defaultBranch.setStore(defaultStore);
                 }
             }
-
-            // 4. Update Admin relationships if missing
             boolean adminNeedsUpdate = false;
             if (adminUser.getStore() == null) {
                 adminUser.setStore(defaultStore);
@@ -111,7 +103,6 @@ public class DataInitializer implements CommandLineRunner {
 
             if (adminNeedsUpdate) {
                 adminUser.setUpdatedAt(LocalDateTime.now());
-                // No need for saveAndFlush, the transaction commit will flush the dirty session state safely
                 log.info("Admin updated successfully with store and branch");
             }
 
