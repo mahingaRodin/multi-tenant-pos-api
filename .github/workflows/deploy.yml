@@ -65,10 +65,10 @@ jobs:
           script: |
             set -e
             
-            # Apply all manifest changes from your local k8s/ folder
+            # applying all local manifest k8s changes to the server
             kubectl apply -f /root/k8s/
             
-            # Update to the exact new image
+            # updating to the exact new image
             kubectl set image deployment/pos-backend \
               pos-backend=${{ env.IMAGE }}:${{ github.sha }} -n pos
             
