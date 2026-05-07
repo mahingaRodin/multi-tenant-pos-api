@@ -1,0 +1,2 @@
+ALTER TABLE users
+    ADD COLUMN discharged_at TIMESTAMP NULL;
