@@ -73,5 +73,5 @@ jobs:
               pos-backend=${{ env.IMAGE }}:${{ github.sha }} -n pos
             
             kubectl rollout status deployment/pos-backend -n pos
-            
-            echo "✅ Deploy complete"
+            #success message
+            echo "Server set to be safe && Deploy complete"
