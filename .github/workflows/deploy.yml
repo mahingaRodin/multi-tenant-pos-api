@@ -6,12 +6,11 @@ on:
 
 env:
   IMAGE: headie1/pos-backend
+  K8S_DIR: /root/k8s
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
 
     steps:
       - uses: actions/checkout@v4
@@ -22,7 +21,7 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Build (Maven)
+      - name: Build backend
         run: mvn -DskipTests clean package
 
       - name: Login to Docker Hub
@@ -31,47 +30,36 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & push image
+      - name: Build & push image (immutable tag only)
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: |
-            ${{ env.IMAGE }}:${{ github.sha }}
-            ${{ env.IMAGE }}:latest
+          tags: ${{ env.IMAGE }}:${{ github.sha }}
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Copy k8s manifests to server
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USERNAME }}
-          password: ${{ secrets.SERVER_PASSWORD }}
-          source: "k8s/"
-          target: "/root/k8s/"
-
-      - name: Deploy to Kamatera Server
+      - name: Deploy to server via SSH (NO SCP of k8s files)
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
+
           script: |
             set -e
-            
-            # applying all local manifest k8s changes to the server
-            kubectl apply -f /root/k8s/
-            
-            # updating to the exact new image
+
+            echo "Starting deployment..."
+
             kubectl set image deployment/pos-backend \
-              pos-backend=${{ env.IMAGE }}:${{ github.sha }} -n pos
-            
-            kubectl rollout status deployment/pos-backend -n pos
-            #success message
-            echo "Server set to be safe && Deploy complete"
+              pos-backend=headie1/pos-backend:${{ github.sha }} \
+              -n pos
+
+            kubectl rollout status deployment/pos-backend -n pos --timeout=180s
+
+            kubectl get pods -n pos -l app=pos-backend
+
+            echo "✅ Deployment successful: ${{ github.sha }}"
