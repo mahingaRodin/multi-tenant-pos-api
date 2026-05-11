@@ -6,7 +6,6 @@ on:
 
 env:
   IMAGE: headie1/pos-backend
-  K8S_DIR: /root/k8s
 
 jobs:
   build:
@@ -21,7 +20,7 @@ jobs:
           java-version: "21"
           cache: maven
 
-      - name: Build backend
+      - name: Build JAR (skip tests for speed — optional)
         run: mvn -DskipTests clean package
 
       - name: Login to Docker Hub
@@ -30,36 +29,57 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build & push image (immutable tag only)
+      - name: Build & Push Docker Image
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: ${{ env.IMAGE }}:${{ github.sha }}
+          tags: |
+            ${{ env.IMAGE }}:${{ github.sha }}
+          cache-from: type=registry,ref=${{ env.IMAGE }}:latest
+          cache-to: type=inline
 
   deploy:
     runs-on: ubuntu-latest
     needs: build
 
     steps:
-      - name: Deploy to server via SSH (NO SCP of k8s files)
+      - name: Deploy to Kubernetes Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
-
           script: |
             set -e
 
-            echo "Starting deployment..."
+            echo "🚀 Starting deployment..."
 
+            IMAGE_TAG=${{ env.IMAGE }}:${{ github.sha }}
+
+            echo "📦 Deploying image: $IMAGE_TAG"
+
+            # Apply manifests (safe to run even if unchanged)
+            kubectl apply -f /root/k8s/
+
+            # Force update image
             kubectl set image deployment/pos-backend \
-              pos-backend=headie1/pos-backend:${{ github.sha }} \
+              pos-backend=$IMAGE_TAG \
               -n pos
 
-            kubectl rollout status deployment/pos-backend -n pos --timeout=180s
+            echo "⏳ Waiting for rollout (this may take time due to DB + Spring Boot startup)..."
 
+            # Increased timeout for Spring Boot + DB + Redis init
+            kubectl rollout status deployment/pos-backend \
+              -n pos \
+              --timeout=600s || {
+                echo "❌ Rollout failed or timed out"
+                kubectl get pods -n pos -l app=pos-backend
+                kubectl describe pod -n pos -l app=pos-backend
+                exit 1
+              }
+
+            echo "📊 Final pod state:"
             kubectl get pods -n pos -l app=pos-backend
 
-            echo "✅ Deployment successful: ${{ github.sha }}"
+            echo "✅ Deployment successful: $IMAGE_TAG"
