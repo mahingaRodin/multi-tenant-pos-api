@@ -1,26 +1,32 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
+
 metadata:
   name: pos-backend
   namespace: pos
+
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
     cert-manager.io/cluster-issuer: "letsencrypt-prod"
+
 spec:
   ingressClassName: nginx
+
   tls:
     - hosts:
         - pos.185.229.227.70.nip.io
       secretName: pos-tls
+
   rules:
     - host: pos.185.229.227.70.nip.io
+
       http:
         paths:
-          - path: /msp(/|$)(.*)
-            pathType: ImplementationSpecific
+          - path: /msp
+            pathType: Prefix
+
             backend:
               service:
                 name: pos-backend

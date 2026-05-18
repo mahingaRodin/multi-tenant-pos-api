@@ -1,71 +1,97 @@
 apiVersion: apps/v1
 kind: Deployment
+
 metadata:
   name: pos-backend
   namespace: pos
   labels:
     app: pos-backend
+
 spec:
   replicas: 1
+
   selector:
     matchLabels:
       app: pos-backend
+
   template:
     metadata:
       labels:
         app: pos-backend
+
     spec:
       containers:
         - name: pos-backend
-          image: headie1/pos-backend:0.0.6
+
+          image: headie1/pos-backend:0.0.7
           imagePullPolicy: Always
+
           ports:
             - containerPort: 5000
               name: http
+
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: "prod"
+
             - name: SPRING_DATASOURCE_URL
               value: "jdbc:postgresql://pos-postgres:5432/pos_db"
+
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: pos-db-secret
                   key: username
+
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: pos-db-secret
                   key: password
+
             - name: SPRING_REDIS_HOST
               value: "redis-service"
+
             - name: SPRING_REDIS_PORT
               value: "6379"
+
             - name: SPRING_CACHE_TYPE
               value: "redis"
+
             - name: JWT_SECRET
               valueFrom:
                 secretKeyRef:
                   name: pos-backend-secrets
                   key: jwt-secret
+
             - name: SERVER_FORWARD_HEADERS_STRATEGY
               value: "framework"
+
           resources:
             requests:
               memory: "256Mi"
               cpu: "100m"
+
             limits:
               memory: "512Mi"
               cpu: "500m"
-          livenessProbe:
-            httpGet:
-              path: /actuator/health
-              port: 5000
-            initialDelaySeconds: 240
-            periodSeconds: 20
+
           readinessProbe:
             httpGet:
-              path: /actuator/health
+              path: /msp/actuator/health
               port: 5000
+
             initialDelaySeconds: 180
             periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 12
+
+          livenessProbe:
+            httpGet:
+              path: /msp/actuator/health
+              port: 5000
+
+            initialDelaySeconds: 240
+            periodSeconds: 20
+            timeoutSeconds: 3
+            failureThreshold: 6
