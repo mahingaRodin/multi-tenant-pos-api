@@ -13,6 +13,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.www.BasicAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.Arrays;
 
@@ -20,7 +21,6 @@ import java.util.Arrays;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -41,22 +41,40 @@ public class SecurityConfig {
                 .build();
     }
 
-    private CorsConfigurationSource corsConfigurationSource() {
-        return request -> {
-            CorsConfiguration cfg = new CorsConfiguration();
-            cfg.setAllowedOriginPatterns(Arrays.asList(
-                    "http://185.181.9.11",
-                    "http://185.181.9.11:*",
-                    "http://localhost:*",
-                    "http://127.0.0.1:*"
-            ));
-            cfg.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-            cfg.setAllowedHeaders(Arrays.asList("*"));
-            cfg.setAllowCredentials(true);
-            cfg.setExposedHeaders(Arrays.asList("Authorization"));
-            cfg.setMaxAge(3600L);
-            return cfg;
-        };
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+
+        CorsConfiguration cfg = new CorsConfiguration();
+
+        cfg.setAllowedOriginPatterns(Arrays.asList(
+                "*"
+        ));
+
+        cfg.setAllowedMethods(Arrays.asList(
+                "GET",
+                "POST",
+                "PUT",
+                "PATCH",
+                "DELETE",
+                "OPTIONS"
+        ));
+
+        cfg.setAllowedHeaders(Arrays.asList("*"));
+
+        cfg.setExposedHeaders(Arrays.asList(
+                "Authorization"
+        ));
+
+        cfg.setAllowCredentials(false);
+
+        cfg.setMaxAge(3600L);
+
+        UrlBasedCorsConfigurationSource source =
+                new UrlBasedCorsConfigurationSource();
+
+        source.registerCorsConfiguration("/**", cfg);
+
+        return source;
     }
 
     @Bean
