@@ -4,6 +4,7 @@ metadata:
   name: pos-backend
   namespace: pos
   annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/proxy-body-size: "10m"
     nginx.ingress.kubernetes.io/use-forwarded-headers: "true"
@@ -12,14 +13,14 @@ spec:
   ingressClassName: nginx
   tls:
     - hosts:
-        - pos.5.180.181.195.nip.io
+        - pos.185.229.227.70.nip.io
       secretName: pos-tls
   rules:
-    - host: pos.5.180.181.195.nip.io
+    - host: pos.185.229.227.70.nip.io
       http:
         paths:
-          - path: /
-            pathType: Prefix
+          - path: /msp(/|$)(.*)
+            pathType: ImplementationSpecific
             backend:
               service:
                 name: pos-backend
