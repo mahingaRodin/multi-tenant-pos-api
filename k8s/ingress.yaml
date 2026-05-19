@@ -5,8 +5,10 @@ metadata:
   namespace: pos
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "false"
+
 spec:
-  ingressClassName: nginx
+  ingressClassName: traefik
+
   rules:
     - host: pos.185.229.227.70.nip.io
       http:
