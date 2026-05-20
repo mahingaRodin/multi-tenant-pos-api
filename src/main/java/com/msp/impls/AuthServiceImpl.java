@@ -2,6 +2,7 @@ package com.msp.impls;
 
 import com.msp.configs.JwtProvider;
 import com.msp.enums.EUserRole;
+import com.msp.enums.EUserStatus;
 import com.msp.exceptions.UserException;
 import com.msp.mappers.UserMapper;
 import com.msp.models.User;
@@ -63,6 +64,7 @@ public class AuthServiceImpl implements AuthService {
         newUser.setLastName(userDto.getLastName());
         newUser.setPhone(userDto.getPhone());
         newUser.setRole(userDto.getRole());
+        newUser.setUserStatus(EUserStatus.PENDING);
         newUser.setLastLogin(LocalDateTime.now());
         newUser.setCreatedAt(LocalDateTime.now());
         newUser.setUpdatedAt(LocalDateTime.now());

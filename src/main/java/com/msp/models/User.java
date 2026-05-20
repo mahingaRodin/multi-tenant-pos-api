@@ -56,7 +56,7 @@ public class User {
 
     @Column(nullable = false)
     @Enumerated(EnumType.STRING)
-    @ColumnDefault("'ACTIVE")
+    @ColumnDefault("'ACTIVE'")
     private EUserStatus userStatus;
     
     private LocalDateTime suspendedAt;
