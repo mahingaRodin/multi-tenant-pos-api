@@ -102,12 +102,14 @@ public class AuthServiceImpl implements AuthService {
         Authentication authentication = authenticate(email, password);
         SecurityContextHolder.getContext().setAuthentication(authentication);
 
-        String token = provider.generateToken(authentication);
-
         // Get and update user
         User user = userRepo.findByEmail(email);
         user.setLastLogin(LocalDateTime.now());
         user = userRepo.save(user);
+
+        // Use the full token (with tenantId + userId) so tenant-scoped users
+        // get their tenantId embedded in the JWT from the first login.
+        String token = provider.generateToken(authentication, user);
 
         AuthResponse authResponse = new AuthResponse();
         authResponse.setJwt(token);
