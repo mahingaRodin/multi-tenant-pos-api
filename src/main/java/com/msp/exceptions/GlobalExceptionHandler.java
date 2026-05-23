@@ -80,6 +80,25 @@ public class GlobalExceptionHandler {
                 .body(errorBody(HttpStatus.INTERNAL_SERVER_ERROR, "An unexpected error occurred"));
     }
 
+    @ExceptionHandler(PortalException.class)
+    public ResponseEntity<Map<String, Object>> handlePortalException(PortalException ex) {
+        String message = ex.getMessage();
+        HttpStatus status;
+        if (message != null && message.contains("not found")) {
+            status = HttpStatus.NOT_FOUND;
+        } else if (message != null && (message.contains("already exists")
+                || message.contains("already in use"))) {
+            status = HttpStatus.CONFLICT;
+        } else if (message != null && (message.contains("not authorized")
+                || message.contains("does not belong"))) {
+            status = HttpStatus.FORBIDDEN;
+        } else {
+            status = HttpStatus.BAD_REQUEST;
+        }
+        return ResponseEntity.status(status).body(errorBody(status, message));
+    }
+
+
     private Map<String, Object> errorBody(HttpStatus status, String message) {
         Map<String, Object> body = new HashMap<>();
         body.put("timestamp", LocalDateTime.now().toString());
