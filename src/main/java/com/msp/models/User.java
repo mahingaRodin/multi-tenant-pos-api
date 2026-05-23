@@ -69,7 +69,7 @@ public class User {
     private LocalDateTime suspendedAt;
     private LocalDateTime dischargedAt;
 
-    private LocalDateTime createdAt;g
+    private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
     private LocalDateTime lastLogin;
 
