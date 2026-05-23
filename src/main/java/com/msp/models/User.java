@@ -1,7 +1,7 @@
 package com.msp.models;
 
-import com.msp.enums.EUserRole;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.msp.enums.EUserRole;
 import com.msp.enums.EUserStatus;
 import jakarta.persistence.*;
 
@@ -59,6 +59,13 @@ public class User {
     @ColumnDefault("'ACTIVE'")
     private EUserStatus userStatus;
     
+    /**
+     * Links this user to their Business tenant.
+     * Null for ROLE_SUPER_ADMIN. Set for all tenant-scoped users.
+     */
+    @Column(name = "tenant_id")
+    private UUID tenantId;
+
     private LocalDateTime suspendedAt;
     private LocalDateTime dischargedAt;
 
