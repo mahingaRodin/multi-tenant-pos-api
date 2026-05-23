@@ -35,6 +35,23 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(status).body(errorBody(status, message));
     }
 
+    @ExceptionHandler(CustomerException.class)
+    public ResponseEntity<Map<String, Object>> handleCustomerException(CustomerException ex) {
+        String message = ex.getMessage();
+        HttpStatus status;
+        if (message != null && (message.contains("already registered")
+                || message.contains("already exists")
+                || message.contains("already in use"))) {
+            status = HttpStatus.CONFLICT;                   // 409
+        } else if (message != null && (message.contains("not found")
+                || message.contains("not interacted"))) {
+            status = HttpStatus.NOT_FOUND;                  // 404
+        } else {
+            status = HttpStatus.BAD_REQUEST;                // 400
+        }
+        return ResponseEntity.status(status).body(errorBody(status, message));
+    }
+
     @ExceptionHandler(UserException.class)
     public ResponseEntity<Map<String, Object>> handleUserException(UserException ex) {
         HttpStatus status = ex.getMessage() != null && ex.getMessage().contains("not found")
