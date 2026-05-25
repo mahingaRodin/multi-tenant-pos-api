@@ -15,7 +15,7 @@ import com.msp.payloads.response.CustomerRegistrationResponse;
 import com.msp.repositories.CustomerRepository;
 import com.msp.repositories.CustomerStoreRelationshipRepository;
 import com.msp.repositories.StoreRepository;
-import com.msp.services.CustomerRegistrationService;
+import com.msp.services.ClientRegistrationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheConfig;
@@ -37,7 +37,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 @Slf4j
 @CacheConfig(cacheNames = "customers")
-public class CustomerRegistrationServiceImpl implements CustomerRegistrationService {
+public class ClientRegistrationServiceImpl implements ClientRegistrationService {
 
     private final CustomerRepository customerRepo;
     private final CustomerStoreRelationshipRepository relationshipRepo;

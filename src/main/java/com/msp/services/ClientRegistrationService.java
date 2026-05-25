@@ -10,7 +10,7 @@ import org.springframework.data.domain.Page;
 
 import java.util.UUID;
 
-public interface CustomerRegistrationService {
+public interface ClientRegistrationService {
 
     /**
      * Global self-registration — one account per person, platform-wide.

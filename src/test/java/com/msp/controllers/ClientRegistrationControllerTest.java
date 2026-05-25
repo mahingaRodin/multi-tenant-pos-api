@@ -7,7 +7,7 @@ import com.msp.payloads.dtos.CustomerStoreRelationshipDto;
 import com.msp.payloads.dtos.CustomerUpdateDto;
 import com.msp.payloads.request.CustomerRegistrationRequest;
 import com.msp.payloads.response.CustomerRegistrationResponse;
-import com.msp.services.CustomerRegistrationService;
+import com.msp.services.ClientRegistrationService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -29,10 +29,10 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(CustomerRegistrationController.class)
+@WebMvcTest(ClientRegistrationController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@DisplayName("CustomerRegistrationController Tests")
-class CustomerRegistrationControllerTest {
+@DisplayName("ClientRegistrationController Tests")
+class ClientRegistrationControllerTest {
 
     @Autowired
     private MockMvc mockMvc;
@@ -40,7 +40,7 @@ class CustomerRegistrationControllerTest {
     private final ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules();
 
     @MockitoBean
-    private CustomerRegistrationService customerRegistrationService;
+    private ClientRegistrationService clientRegistrationService;
 
     // ── Fixtures ─────────────────────────────────────────────────────────────
 
@@ -81,10 +81,10 @@ class CustomerRegistrationControllerTest {
         return dto;
     }
 
-    // ── POST /api/customers/register ─────────────────────────────────────────
+    // ── POST /api/clients/register ─────────────────────────────────────────
 
     @Nested
-    @DisplayName("POST /api/customers/register — Global Self Registration")
+    @DisplayName("POST /api/clients/register — Global Self Registration")
     class Register {
 
         @Test
@@ -92,13 +92,13 @@ class CustomerRegistrationControllerTest {
         void register_valid_returns201() throws Exception {
             UUID customerId = UUID.randomUUID();
 
-            Mockito.when(customerRegistrationService.register(any(CustomerRegistrationRequest.class)))
+            Mockito.when(clientRegistrationService.register(any(CustomerRegistrationRequest.class)))
                     .thenReturn(new CustomerRegistrationResponse(
                             customerId,
                             "john@example.com",
                             "Account created successfully. You can now browse and shop from any store."));
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(validRequest())))
                     .andExpect(status().isCreated())
@@ -113,7 +113,7 @@ class CustomerRegistrationControllerTest {
             CustomerRegistrationRequest req = validRequest();
             req.setFirstName(null);
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
@@ -125,7 +125,7 @@ class CustomerRegistrationControllerTest {
             CustomerRegistrationRequest req = validRequest();
             req.setLastName(null);
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
@@ -137,7 +137,7 @@ class CustomerRegistrationControllerTest {
             CustomerRegistrationRequest req = validRequest();
             req.setEmail("not-an-email");
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
@@ -149,7 +149,7 @@ class CustomerRegistrationControllerTest {
             CustomerRegistrationRequest req = validRequest();
             req.setPassword("abc");
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(req)))
                     .andExpect(status().isBadRequest());
@@ -158,11 +158,11 @@ class CustomerRegistrationControllerTest {
         @Test
         @DisplayName("Duplicate email returns 409 Conflict")
         void register_duplicateEmail_returns409() throws Exception {
-            Mockito.when(customerRegistrationService.register(any()))
+            Mockito.when(clientRegistrationService.register(any()))
                     .thenThrow(new CustomerException(
                             "An account with email 'john@example.com' already exists."));
 
-            mockMvc.perform(post("/api/customers/register")
+            mockMvc.perform(post("/api/clients/register")
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(validRequest())))
                     .andExpect(status().isConflict())
@@ -171,20 +171,20 @@ class CustomerRegistrationControllerTest {
         }
     }
 
-    // ── GET /api/customers/{id}/profile ──────────────────────────────────────
+    // ── GET /api/clients/{id}/profile ──────────────────────────────────────
 
     @Nested
-    @DisplayName("GET /api/customers/{id}/profile — Get My Profile")
+    @DisplayName("GET /api/clients/{id}/profile — Get My Profile")
     class GetProfile {
 
         @Test
         @DisplayName("Existing customer returns 200 with global profile")
         void get_exists_returns200() throws Exception {
             UUID id = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.getCustomer(id))
+            Mockito.when(clientRegistrationService.getCustomer(id))
                     .thenReturn(customerDto(id));
 
-            mockMvc.perform(get("/api/customers/{id}/profile", id))
+            mockMvc.perform(get("/api/clients/{id}/profile", id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.id").value(id.toString()))
                     .andExpect(jsonPath("$.email").value("john@example.com"));
@@ -194,18 +194,18 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Non-existent customer returns 404")
         void get_notFound_returns404() throws Exception {
             UUID id = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.getCustomer(id))
+            Mockito.when(clientRegistrationService.getCustomer(id))
                     .thenThrow(new CustomerException("Customer not found: " + id));
 
-            mockMvc.perform(get("/api/customers/{id}/profile", id))
+            mockMvc.perform(get("/api/clients/{id}/profile", id))
                     .andExpect(status().isNotFound());
         }
     }
 
-    // ── GET /api/customers/{id}/stores ───────────────────────────────────────
+    // ── GET /api/clients/{id}/stores ───────────────────────────────────────
 
     @Nested
-    @DisplayName("GET /api/customers/{id}/stores — Get My Stores")
+    @DisplayName("GET /api/clients/{id}/stores — Get My Stores")
     class GetMyStores {
 
         @Test
@@ -217,10 +217,10 @@ class CustomerRegistrationControllerTest {
             Page<CustomerStoreRelationshipDto> page =
                     new PageImpl<>(List.of(relationshipDto(customerId, storeId)));
 
-            Mockito.when(customerRegistrationService.getMyStores(eq(customerId), eq(0), eq(10)))
+            Mockito.when(clientRegistrationService.getMyStores(eq(customerId), eq(0), eq(10)))
                     .thenReturn(page);
 
-            mockMvc.perform(get("/api/customers/{id}/stores", customerId)
+            mockMvc.perform(get("/api/clients/{id}/stores", customerId)
                             .param("page", "0")
                             .param("size", "10"))
                     .andExpect(status().isOk())
@@ -233,19 +233,19 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Customer with no orders returns empty page")
         void getMyStores_noOrders_returnsEmpty() throws Exception {
             UUID customerId = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.getMyStores(eq(customerId), anyInt(), anyInt()))
+            Mockito.when(clientRegistrationService.getMyStores(eq(customerId), anyInt(), anyInt()))
                     .thenReturn(Page.empty());
 
-            mockMvc.perform(get("/api/customers/{id}/stores", customerId))
+            mockMvc.perform(get("/api/clients/{id}/stores", customerId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
     }
 
-    // ── PATCH /api/customers/{id}/profile ────────────────────────────────────
+    // ── PATCH /api/clients/{id}/profile ────────────────────────────────────
 
     @Nested
-    @DisplayName("PATCH /api/customers/{id}/profile — Update My Profile")
+    @DisplayName("PATCH /api/clients/{id}/profile — Update My Profile")
     class UpdateProfile {
 
         @Test
@@ -260,10 +260,10 @@ class CustomerRegistrationControllerTest {
             CustomerDto updated = customerDto(id);
             updated.setFirstName("Johnny");
 
-            Mockito.when(customerRegistrationService.updateCustomer(eq(id), any(CustomerUpdateDto.class)))
+            Mockito.when(clientRegistrationService.updateCustomer(eq(id), any(CustomerUpdateDto.class)))
                     .thenReturn(updated);
 
-            mockMvc.perform(patch("/api/customers/{id}/profile", id)
+            mockMvc.perform(patch("/api/clients/{id}/profile", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isOk())
@@ -277,10 +277,10 @@ class CustomerRegistrationControllerTest {
             CustomerUpdateDto dto = new CustomerUpdateDto();
             dto.setEmail("taken@example.com");
 
-            Mockito.when(customerRegistrationService.updateCustomer(eq(id), any()))
+            Mockito.when(clientRegistrationService.updateCustomer(eq(id), any()))
                     .thenThrow(new CustomerException("Email 'taken@example.com' is already in use."));
 
-            mockMvc.perform(patch("/api/customers/{id}/profile", id)
+            mockMvc.perform(patch("/api/clients/{id}/profile", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content(objectMapper.writeValueAsString(dto)))
                     .andExpect(status().isConflict());
@@ -290,20 +290,20 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Customer not found returns 404")
         void update_notFound_returns404() throws Exception {
             UUID id = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.updateCustomer(eq(id), any()))
+            Mockito.when(clientRegistrationService.updateCustomer(eq(id), any()))
                     .thenThrow(new CustomerException("Customer not found: " + id));
 
-            mockMvc.perform(patch("/api/customers/{id}/profile", id)
+            mockMvc.perform(patch("/api/clients/{id}/profile", id)
                             .contentType(MediaType.APPLICATION_JSON)
                             .content("{}"))
                     .andExpect(status().isNotFound());
         }
     }
 
-    // ── GET /api/portal/stores/{storeId}/customers ───────────────────────────
+    // ── GET /api/clients/portal/stores/{storeId} ───────────────────────────
 
     @Nested
-    @DisplayName("GET /api/portal/stores/{storeId}/customers — Store Portal: List Customers")
+    @DisplayName("GET /api/clients/portal/stores/{storeId} — Store Portal: List Customers")
     class GetStoreCustomers {
 
         @Test
@@ -315,10 +315,10 @@ class CustomerRegistrationControllerTest {
             Page<CustomerStoreRelationshipDto> page =
                     new PageImpl<>(List.of(relationshipDto(customerId, storeId)));
 
-            Mockito.when(customerRegistrationService.getCustomersByStore(eq(storeId), eq(0), eq(10)))
+            Mockito.when(clientRegistrationService.getCustomersByStore(eq(storeId), eq(0), eq(10)))
                     .thenReturn(page);
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers", storeId)
+            mockMvc.perform(get("/api/clients/portal/stores/{storeId}", storeId)
                             .param("page", "0")
                             .param("size", "10"))
                     .andExpect(status().isOk())
@@ -331,30 +331,30 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Store not found returns 404")
         void list_storeNotFound_returns404() throws Exception {
             UUID storeId = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.getCustomersByStore(eq(storeId), anyInt(), anyInt()))
+            Mockito.when(clientRegistrationService.getCustomersByStore(eq(storeId), anyInt(), anyInt()))
                     .thenThrow(new CustomerException("Store not found: " + storeId));
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers", storeId))
+            mockMvc.perform(get("/api/clients/portal/stores/{storeId}", storeId))
                     .andExpect(status().isNotFound());
         }
 
         @Test
-        @DisplayName("Store with no customers returns empty page")
+        @DisplayName("Store with no clients returns empty page")
         void list_empty_returnsEmptyPage() throws Exception {
             UUID storeId = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.getCustomersByStore(eq(storeId), anyInt(), anyInt()))
+            Mockito.when(clientRegistrationService.getCustomersByStore(eq(storeId), anyInt(), anyInt()))
                     .thenReturn(Page.empty());
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers", storeId))
+            mockMvc.perform(get("/api/clients/portal/stores/{storeId}", storeId))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
     }
 
-    // ── GET /api/portal/stores/{storeId}/customers/search ────────────────────
+    // ── GET /api/clients/portal/stores/{storeId}/search ────────────────────
 
     @Nested
-    @DisplayName("GET /api/portal/stores/{storeId}/customers/search — Store Portal: Search")
+    @DisplayName("GET /api/clients/portal/stores/{storeId}/search — Store Portal: Search")
     class SearchStoreCustomers {
 
         @Test
@@ -366,11 +366,11 @@ class CustomerRegistrationControllerTest {
             Page<CustomerStoreRelationshipDto> page =
                     new PageImpl<>(List.of(relationshipDto(customerId, storeId)));
 
-            Mockito.when(customerRegistrationService.searchCustomersByStore(
+            Mockito.when(clientRegistrationService.searchCustomersByStore(
                             eq(storeId), eq("john"), anyInt(), anyInt()))
                     .thenReturn(page);
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers/search", storeId)
+            mockMvc.perform(get("/api/clients/portal/stores/{storeId}/search", storeId)
                             .param("q", "john"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content[0].customerId").value(customerId.toString()));
@@ -380,36 +380,36 @@ class CustomerRegistrationControllerTest {
         @DisplayName("No matches returns 200 with empty content")
         void search_noMatches_returnsEmpty() throws Exception {
             UUID storeId = UUID.randomUUID();
-            Mockito.when(customerRegistrationService.searchCustomersByStore(
+            Mockito.when(clientRegistrationService.searchCustomersByStore(
                             eq(storeId), eq("xyz"), anyInt(), anyInt()))
                     .thenReturn(Page.empty());
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers/search", storeId)
+            mockMvc.perform(get("/api/clients/portal/stores/{storeId}/search", storeId)
                             .param("q", "xyz"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.content").isEmpty());
         }
     }
 
-    // ── GET /api/portal/stores/{storeId}/customers/{customerId} ──────────────
+    // ── GET /api/clients/stores/{storeId}/{clientId} ──────────────
 
     @Nested
-    @DisplayName("GET /api/portal/stores/{storeId}/customers/{customerId} — Store Portal: Get One")
+    @DisplayName("GET /api/clients/stores/{storeId}/{clientId} — Store Portal: Get One")
     class GetCustomerInStore {
 
         @Test
         @DisplayName("Returns relationship DTO when customer has interacted with store")
         void get_exists_returns200() throws Exception {
             UUID storeId    = UUID.randomUUID();
-            UUID customerId = UUID.randomUUID();
+            UUID clientId = UUID.randomUUID();
 
-            Mockito.when(customerRegistrationService.getCustomerInStore(customerId, storeId))
-                    .thenReturn(relationshipDto(customerId, storeId));
+            Mockito.when(clientRegistrationService.getCustomerInStore(clientId, storeId))
+                    .thenReturn(relationshipDto(clientId, storeId));
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers/{customerId}",
-                            storeId, customerId))
+            mockMvc.perform(get("/api/clients/stores/{storeId}/{clientId}",
+                            storeId, clientId))
                     .andExpect(status().isOk())
-                    .andExpect(jsonPath("$.customerId").value(customerId.toString()))
+                    .andExpect(jsonPath("$.customerId").value(clientId.toString()))
                     .andExpect(jsonPath("$.storeId").value(storeId.toString()));
         }
 
@@ -417,37 +417,37 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Customer has never interacted with store returns 404")
         void get_noRelationship_returns404() throws Exception {
             UUID storeId    = UUID.randomUUID();
-            UUID customerId = UUID.randomUUID();
+            UUID clientId = UUID.randomUUID();
 
-            Mockito.when(customerRegistrationService.getCustomerInStore(customerId, storeId))
+            Mockito.when(clientRegistrationService.getCustomerInStore(clientId, storeId))
                     .thenThrow(new CustomerException("Customer has not interacted with this store yet."));
 
-            mockMvc.perform(get("/api/portal/stores/{storeId}/customers/{customerId}",
-                            storeId, customerId))
+            mockMvc.perform(get("/api/clients/stores/{storeId}/{clientId}",
+                            storeId, clientId))
                     .andExpect(status().isNotFound());
         }
     }
 
-    // ── PATCH /api/portal/stores/{storeId}/customers/{customerId}/notes ───────
+    // ── PATCH /api/clients/portal/stores/{storeId}/{clientId}/notes ───────
 
     @Nested
-    @DisplayName("PATCH /api/portal/stores/{storeId}/customers/{customerId}/notes — Update Notes")
+    @DisplayName("PATCH /api/clients/portal/stores/{storeId}/{clientId}/notes — Update Notes")
     class UpdateStoreNotes {
 
         @Test
         @DisplayName("Updates notes and returns updated relationship DTO")
         void updateNotes_valid_returns200() throws Exception {
             UUID storeId    = UUID.randomUUID();
-            UUID customerId = UUID.randomUUID();
+            UUID clientId = UUID.randomUUID();
 
-            CustomerStoreRelationshipDto dto = relationshipDto(customerId, storeId);
+            CustomerStoreRelationshipDto dto = relationshipDto(clientId, storeId);
             dto.setNotes("VIP customer");
 
-            Mockito.when(customerRegistrationService.updateStoreNotes(customerId, storeId, "VIP customer"))
+            Mockito.when(clientRegistrationService.updateStoreNotes(clientId, storeId, "VIP customer"))
                     .thenReturn(dto);
 
-            mockMvc.perform(patch("/api/portal/stores/{storeId}/customers/{customerId}/notes",
-                            storeId, customerId)
+            mockMvc.perform(patch("/api/clients/portal/stores/{storeId}/{clientId}/notes",
+                            storeId, clientId)
                             .param("notes", "VIP customer"))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.notes").value("VIP customer"));
@@ -457,31 +457,31 @@ class CustomerRegistrationControllerTest {
         @DisplayName("Customer not in store returns 404")
         void updateNotes_noRelationship_returns404() throws Exception {
             UUID storeId    = UUID.randomUUID();
-            UUID customerId = UUID.randomUUID();
+            UUID clientId = UUID.randomUUID();
 
-            Mockito.when(customerRegistrationService.updateStoreNotes(customerId, storeId, "note"))
+            Mockito.when(clientRegistrationService.updateStoreNotes(clientId, storeId, "note"))
                     .thenThrow(new CustomerException("Customer has not interacted with this store yet."));
 
-            mockMvc.perform(patch("/api/portal/stores/{storeId}/customers/{customerId}/notes",
-                            storeId, customerId)
+            mockMvc.perform(patch("/api/clients/portal/stores/{storeId}/{clientId}/notes",
+                            storeId, clientId)
                             .param("notes", "note"))
                     .andExpect(status().isNotFound());
         }
     }
 
-    // ── DELETE /api/customers/{id} ────────────────────────────────────────────
+    // ── DELETE /api/clients/{id} ────────────────────────────────────────────
 
     @Nested
-    @DisplayName("DELETE /api/customers/{id} — Super Admin: Delete Account")
+    @DisplayName("DELETE /api/clients/{id} — Super Admin: Delete Account")
     class DeleteCustomer {
 
         @Test
         @DisplayName("Existing customer is deleted and returns 200 with message")
         void delete_exists_returns200() throws Exception {
             UUID id = UUID.randomUUID();
-            Mockito.doNothing().when(customerRegistrationService).deleteCustomer(id);
+            Mockito.doNothing().when(clientRegistrationService).deleteCustomer(id);
 
-            mockMvc.perform(delete("/api/customers/{id}", id))
+            mockMvc.perform(delete("/api/clients/{id}", id))
                     .andExpect(status().isOk())
                     .andExpect(jsonPath("$.message").value("Customer account deleted successfully."));
         }
@@ -491,9 +491,9 @@ class CustomerRegistrationControllerTest {
         void delete_notFound_returns404() throws Exception {
             UUID id = UUID.randomUUID();
             Mockito.doThrow(new CustomerException("Customer not found: " + id))
-                    .when(customerRegistrationService).deleteCustomer(id);
+                    .when(clientRegistrationService).deleteCustomer(id);
 
-            mockMvc.perform(delete("/api/customers/{id}", id))
+            mockMvc.perform(delete("/api/clients/{id}", id))
                     .andExpect(status().isNotFound());
         }
     }
