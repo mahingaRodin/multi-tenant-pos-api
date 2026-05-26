@@ -1,5 +1,6 @@
 package com.msp.impls;
 
+import com.msp.enums.EAuditAction;
 import com.msp.enums.ERegistrationStatus;
 import com.msp.exceptions.BusinessRegistrationException;
 import com.msp.mappers.TenantRegistrationMapper;
@@ -10,6 +11,7 @@ import com.msp.payloads.request.BusinessRegistrationRequest;
 import com.msp.payloads.response.ProvisioningResponse;
 import com.msp.repositories.TenantRegistrationRepository;
 import com.msp.repositories.UserRepository;
+import com.msp.services.AuditLogService;
 import com.msp.services.BusinessRegistrationService;
 import com.msp.services.TenantProvisioningService;
 import com.msp.services.UserService;
@@ -31,6 +33,7 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
     private final TenantRegistrationRepository registrationRepo;
     private final UserRepository userRepo;
     private final TenantProvisioningService provisioningService;
+    private final AuditLogService auditLogService;
 
     // ── Submit ──────────────────────────────────────────────────────────────
 
@@ -71,8 +74,10 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
         log.info("Business registration submitted: id={}, businessName={}, ownerEmail={}",
                 reg.getId(), reg.getBusinessName(), reg.getOwnerEmail());
 
-        // TODO: publish RegistrationSubmittedEvent to SQS → SES confirmation email
-        // For now we log it
+        auditLogService.log(null, null, EAuditAction.REGISTRATION_SUBMITTED,
+                "TenantRegistration", reg.getId().toString(),
+                "businessName=" + reg.getBusinessName(), null);
+
         log.info("TODO: send confirmation email to {}", reg.getOwnerEmail());
 
         return TenantRegistrationMapper.toDto(reg);
@@ -116,7 +121,10 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
         log.info("Registration approved: id={}, by={}", registrationId,
                 admin != null ? admin.getEmail() : "system");
 
-        // Provision the tenant — creates Business + owner User in one transaction
+        auditLogService.log(null, admin, EAuditAction.REGISTRATION_APPROVED,
+                "TenantRegistration", registrationId.toString(),
+                "adminNotes=" + adminNotes, null);
+
         return provisioningService.provisionTenant(registrationId);
     }
 
@@ -136,7 +144,10 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
 
         log.info("Registration rejected: id={}, reason={}", registrationId, rejectionReason);
 
-        // TODO: publish RejectionEvent → SES email to applicant
+        auditLogService.log(null, admin, EAuditAction.REGISTRATION_REJECTED,
+                "TenantRegistration", registrationId.toString(),
+                "reason=" + rejectionReason, null);
+
         log.info("TODO: send rejection email to {}", reg.getOwnerEmail());
 
         return TenantRegistrationMapper.toDto(reg);
@@ -152,6 +163,45 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
         reg = registrationRepo.save(reg);
 
         log.info("Registration marked UNDER_REVIEW: id={}", registrationId);
+        return TenantRegistrationMapper.toDto(reg);
+    }
+
+    @Override
+    @Transactional
+    public TenantRegistrationDto resubmitRegistration(UUID registrationId,
+                                                       BusinessRegistrationRequest updated) {
+        TenantRegistration reg = findOrThrow(registrationId);
+
+        if (reg.getStatus() != ERegistrationStatus.REJECTED) {
+            throw new BusinessRegistrationException(
+                    "Only REJECTED registrations can be resubmitted. Current status: " + reg.getStatus());
+        }
+
+        // Update fields from the new request
+        reg.setOwnerFirstName(updated.getOwnerFirstName());
+        reg.setOwnerLastName(updated.getOwnerLastName());
+        reg.setOwnerPhone(updated.getOwnerPhone());
+        reg.setBusinessName(updated.getBusinessName());
+        reg.setLegalName(updated.getLegalName());
+        reg.setRegistrationNumber(updated.getRegistrationNumber());
+        reg.setCountry(updated.getCountry());
+        reg.setIndustry(updated.getIndustry());
+        reg.setBusinessDescription(updated.getBusinessDescription());
+
+        // Reset lifecycle fields
+        reg.setStatus(ERegistrationStatus.PENDING);
+        reg.setRejectionReason(null);
+        reg.setAdminNotes(null);
+        reg.setReviewedBy(null);
+        reg.setReviewedAt(null);
+
+        reg = registrationRepo.save(reg);
+
+        auditLogService.log(null, null, EAuditAction.REGISTRATION_SUBMITTED,
+                "TenantRegistration", reg.getId().toString(),
+                "resubmitted; businessName=" + reg.getBusinessName(), null);
+
+        log.info("Registration resubmitted: id={}, businessName={}", reg.getId(), reg.getBusinessName());
         return TenantRegistrationMapper.toDto(reg);
     }
 
