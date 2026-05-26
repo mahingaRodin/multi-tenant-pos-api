@@ -7,7 +7,6 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpHeaders;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
@@ -23,9 +22,11 @@ import java.util.UUID;
  *
  * Always clears TenantContext in a finally block — never leaks between requests.
  * ROLE_SUPER_ADMIN users have tenantId = null in their JWT; that is valid.
+ *
+ * Registered as a @Component so Spring can inject it into SecurityConfig,
+ * but excluded from auto-registration via FilterRegistrationBean to avoid double-execution.
  */
 @Component
-@Order(2)
 public class TenantContextFilter extends OncePerRequestFilter {
 
     @Override

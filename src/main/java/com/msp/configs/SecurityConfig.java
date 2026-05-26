@@ -1,5 +1,6 @@
 package com.msp.configs;
 
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -21,6 +22,13 @@ import java.util.Arrays;
 @EnableWebSecurity
 @EnableMethodSecurity
 public class SecurityConfig {
+
+    private final TenantContextFilter tenantContextFilter;
+
+    public SecurityConfig(TenantContextFilter tenantContextFilter) {
+        this.tenantContextFilter = tenantContextFilter;
+    }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         return http
@@ -28,13 +36,14 @@ public class SecurityConfig {
                 .csrf(AbstractHttpConfigurer::disable)
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .addFilterBefore(new JwtValidator(), BasicAuthenticationFilter.class)
-                .addFilterAfter(new TenantContextFilter(), JwtValidator.class)
+                .addFilterAfter(tenantContextFilter, JwtValidator.class)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(org.springframework.http.HttpMethod.OPTIONS, "/**").permitAll()
 
                         // public
                         .requestMatchers("/api/auth/**").permitAll()
                         .requestMatchers("/api/registrations", "/api/registrations/*/status").permitAll()
+                        .requestMatchers("/api/registrations/*/resubmit").permitAll()
                         .requestMatchers("/api/customers/register").permitAll()
                         .requestMatchers("/api/products/store/**", "/api/products/{id}").permitAll()
                         .requestMatchers("/api/categories/store/**", "/api/categories/{id}").permitAll()
@@ -85,5 +94,18 @@ public class SecurityConfig {
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    /**
+     * Prevents Spring Boot from auto-registering TenantContextFilter as a servlet filter.
+     * It is already registered in the security filter chain via addFilterAfter().
+     * Without this, the filter would execute twice per request.
+     */
+    @Bean
+    public FilterRegistrationBean<TenantContextFilter> tenantContextFilterRegistration(
+            TenantContextFilter filter) {
+        FilterRegistrationBean<TenantContextFilter> registration = new FilterRegistrationBean<>(filter);
+        registration.setEnabled(false);
+        return registration;
     }
 }
