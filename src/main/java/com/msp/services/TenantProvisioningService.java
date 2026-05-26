@@ -1,5 +1,6 @@
 package com.msp.services;
 
+import com.msp.enums.ESubscriptionTier;
 import com.msp.payloads.dtos.BusinessDto;
 import com.msp.payloads.response.ProvisioningResponse;
 
@@ -21,4 +22,16 @@ public interface TenantProvisioningService {
      * Returns the Business profile for a given tenantId.
      */
     BusinessDto getTenantDetails(UUID tenantId);
+
+    /**
+     * Soft-deletes a tenant. Sets Business.status = DEPROVISIONED.
+     * SUPER_ADMIN only. Precondition: no active orders in progress.
+     */
+    void deprovisionTenant(UUID tenantId);
+
+    /**
+     * Changes the subscription tier. Extension point for future billing integration.
+     * Postcondition: Business.subscriptionTier updated; SUBSCRIPTION_CHANGED audit log written.
+     */
+    BusinessDto updateTenantPlan(UUID tenantId, ESubscriptionTier tier);
 }

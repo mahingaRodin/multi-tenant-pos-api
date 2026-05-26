@@ -155,10 +155,26 @@ public class BusinessRegistrationController {
     }
 
     @Operation(
-            summary = "Reject a registration (admin)",
-            description = "Rejects the registration with a reason. The applicant will be notified."
+            summary = "Resubmit a rejected registration (applicant)",
+            description = "Allows the original applicant to update and resubmit a REJECTED registration. Resets status to PENDING."
     )
     @ApiResponses({
+            @ApiResponse(responseCode = "200", description = "Registration resubmitted"),
+            @ApiResponse(responseCode = "400", description = "Registration is not in REJECTED status"),
+            @ApiResponse(responseCode = "404", description = "Registration not found")
+    })
+    @PostMapping("/api/registrations/{id}/resubmit")
+    public ResponseEntity<TenantRegistrationDto> resubmitRegistration(
+            @PathVariable UUID id,
+            @Valid @RequestBody BusinessRegistrationRequest body
+    ) {
+        return ResponseEntity.ok(registrationService.resubmitRegistration(id, body));
+    }
+
+    @Operation(
+            summary = "Reject a registration (admin)",
+            description = "Rejects the registration with a reason. The applicant will be notified."
+    )    @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Registration rejected"),
             @ApiResponse(responseCode = "422", description = "Invalid state transition"),
             @ApiResponse(responseCode = "403", description = "Requires SUPER_ADMIN role")
