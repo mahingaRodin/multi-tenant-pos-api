@@ -20,6 +20,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import tools.jackson.databind.ObjectMapper;
+import com.msp.enums.EOutboxStatus;
+import com.msp.events.ConsentEventPayload;
+import com.msp.models.OutboxEvent;
+import com.msp.repositories.OutboxEventRepository;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -33,6 +40,11 @@ public class AdminConsentServiceImpl implements AdminConsentService {
     private final UserRepository userRepo;
     private final UserService userService;
     private final AuditLogService auditLogService;
+    private final OutboxEventRepository outboxRepo;
+    private final ObjectMapper objectMapper;
+
+    @Value("${aws.sqs.notification-queue-url}")
+    private String notificationQueueUrl;
 
     @Override
     @Transactional
@@ -62,7 +74,31 @@ public class AdminConsentServiceImpl implements AdminConsentService {
                 "reason=" + reason + "; durationHours=" + durationHours, null);
 
         log.info("Consent requested: id={}, tenantId={}, admin={}", request.getId(), tenantId, admin.getEmail());
-        // TODO: notify tenant owner via SES
+        try {
+            Business business = businessRepo.findByTenantId(tenantId)
+                    .orElseThrow(() -> new BusinessRegistrationException("No business found for tenant: " + tenantId));
+            User owner = business.getOwner();
+
+            ConsentEventPayload consentPayload = ConsentEventPayload.builder()
+                    .consentRequestId(request.getId())
+                    .tenantId(tenantId)
+                    .reason(reason)
+                    .durationHours(durationHours)
+                    .adminEmail(admin.getEmail())
+                    .ownerEmail(owner.getEmail())
+                    .build();
+
+            OutboxEvent outbox = OutboxEvent.builder()
+                    .eventType("CONSENT_REQUESTED")
+                    .queueUrl(notificationQueueUrl)
+                    .payload(objectMapper.writeValueAsString(consentPayload))
+                    .status(EOutboxStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            outboxRepo.save(outbox);
+        } catch (Exception e) {
+            log.error("Failed to queue consent request email to outbox for request: {}", request.getId(), e);
+        }
         return toDto(request);
     }
 
