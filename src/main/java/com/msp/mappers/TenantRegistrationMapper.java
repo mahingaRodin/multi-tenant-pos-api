@@ -26,6 +26,7 @@ public class TenantRegistrationMapper {
         dto.setSubmittedAt(reg.getSubmittedAt());
         dto.setReviewedAt(reg.getReviewedAt());
         dto.setProvisionedTenantId(reg.getProvisionedTenantId());
+        dto.setDocumentS3Keys(reg.getDocumentS3Keys() != null ? new java.util.ArrayList<>(reg.getDocumentS3Keys()) : new java.util.ArrayList<>());
 
         if (reg.getReviewedBy() != null) {
             dto.setReviewedById(reg.getReviewedBy().getId());

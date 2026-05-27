@@ -22,6 +22,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import tools.jackson.databind.ObjectMapper;
+import com.msp.enums.EOutboxStatus;
+import com.msp.events.RegistrationEventPayload;
+import com.msp.models.OutboxEvent;
+import com.msp.repositories.OutboxEventRepository;
+import com.msp.services.AwsSnsService;
+import org.springframework.beans.factory.annotation.Value;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -34,6 +42,15 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
     private final UserRepository userRepo;
     private final TenantProvisioningService provisioningService;
     private final AuditLogService auditLogService;
+    private final AwsSnsService snsService;
+    private final OutboxEventRepository outboxRepo;
+    private final ObjectMapper objectMapper;
+
+    @Value("${aws.sqs.notification-queue-url}")
+    private String notificationQueueUrl;
+
+    @Value("${aws.sns.admin-topic-arn}")
+    private String adminTopicArn;
 
     // ── Submit ──────────────────────────────────────────────────────────────
 
@@ -78,7 +95,34 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
                 "TenantRegistration", reg.getId().toString(),
                 "businessName=" + reg.getBusinessName(), null);
 
-        log.info("TODO: send confirmation email to {}", reg.getOwnerEmail());
+        try {
+            RegistrationEventPayload emailPayload = RegistrationEventPayload.builder()
+                    .eventType("REGISTRATION_SUBMITTED")
+                    .registrationId(reg.getId())
+                    .ownerEmail(reg.getOwnerEmail())
+                    .ownerFirstName(reg.getOwnerFirstName())
+                    .businessName(reg.getBusinessName())
+                    .build();
+
+            OutboxEvent outbox = OutboxEvent.builder()
+                    .eventType("REGISTRATION_SUBMITTED")
+                    .queueUrl(notificationQueueUrl)
+                    .payload(objectMapper.writeValueAsString(emailPayload))
+                    .status(EOutboxStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            outboxRepo.save(outbox);
+        } catch (Exception e) {
+            log.error("Failed to queue registration confirmation email to outbox for registration: {}", reg.getId(), e);
+        }
+
+        try {
+            String adminMsg = String.format("New pending business registration: %s submitted by %s", 
+                    reg.getBusinessName(), reg.getOwnerEmail());
+            snsService.publishNotification(adminTopicArn, "New MSP Registration", adminMsg);
+        } catch (Exception e) {
+            log.error("Failed to publish SNS notification for new registration: {}", reg.getId(), e);
+        }
 
         return TenantRegistrationMapper.toDto(reg);
     }
@@ -148,7 +192,27 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
                 "TenantRegistration", registrationId.toString(),
                 "reason=" + rejectionReason, null);
 
-        log.info("TODO: send rejection email to {}", reg.getOwnerEmail());
+        try {
+            RegistrationEventPayload emailPayload = RegistrationEventPayload.builder()
+                    .eventType("REGISTRATION_REJECTED")
+                    .registrationId(reg.getId())
+                    .ownerEmail(reg.getOwnerEmail())
+                    .ownerFirstName(reg.getOwnerFirstName())
+                    .businessName(reg.getBusinessName())
+                    .content(rejectionReason)
+                    .build();
+
+            OutboxEvent outbox = OutboxEvent.builder()
+                    .eventType("REGISTRATION_REJECTED")
+                    .queueUrl(notificationQueueUrl)
+                    .payload(objectMapper.writeValueAsString(emailPayload))
+                    .status(EOutboxStatus.PENDING)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            outboxRepo.save(outbox);
+        } catch (Exception e) {
+            log.error("Failed to queue registration rejection email to outbox for registration: {}", reg.getId(), e);
+        }
 
         return TenantRegistrationMapper.toDto(reg);
     }
@@ -237,6 +301,15 @@ public class BusinessRegistrationServiceImpl implements BusinessRegistrationServ
             throw new BusinessRegistrationException(
                     "Cannot transition registration from " + current + " to " + target);
         }
+    }
+
+    @Override
+    @Transactional
+    public void addDocumentKey(UUID registrationId, String s3Key) {
+        TenantRegistration reg = findOrThrow(registrationId);
+        reg.getDocumentS3Keys().add(s3Key);
+        registrationRepo.save(reg);
+        log.info("Document key '{}' added to registration '{}'", s3Key, registrationId);
     }
 
     /**
