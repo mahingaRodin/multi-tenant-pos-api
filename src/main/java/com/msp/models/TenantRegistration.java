@@ -91,6 +91,12 @@ public class TenantRegistration {
     @Column(name = "provisioned_tenant_id")
     private UUID provisionedTenantId;
 
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "registration_documents", joinColumns = @JoinColumn(name = "registration_id"))
+    @Column(name = "document_key", nullable = false)
+    @Builder.Default
+    private List<String> documentS3Keys = new ArrayList<>();
+
     @PrePersist
     protected void onCreate() {
         submittedAt = LocalDateTime.now();

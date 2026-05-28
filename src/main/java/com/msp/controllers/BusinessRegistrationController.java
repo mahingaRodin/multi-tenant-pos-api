@@ -25,6 +25,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import com.msp.services.AwsS3Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.UUID;
 
@@ -34,6 +36,7 @@ import java.util.UUID;
 public class BusinessRegistrationController {
 
     private final BusinessRegistrationService registrationService;
+    private final AwsS3Service s3Service;
 
     // ── Public endpoints ────────────────────────────────────────────────────
 
@@ -73,6 +76,28 @@ public class BusinessRegistrationController {
             @PathVariable UUID id
     ) {
         return ResponseEntity.ok(registrationService.getRegistration(id));
+    }
+
+    @Operation(summary = "Upload supporting documents for a registration",
+               description = "Allows an applicant to upload supporting documents to S3.")
+    @PostMapping(value = "/api/registrations/{id}/documents", consumes = org.springframework.http.MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<Void> uploadDocument(
+            @PathVariable UUID id,
+            @RequestParam("file") MultipartFile file
+    ) {
+        try {
+            String s3Key = s3Service.uploadDocument(
+                    "pending-" + id.toString(),
+                    file.getOriginalFilename(),
+                    file.getInputStream(),
+                    file.getContentType()
+            );
+
+            registrationService.addDocumentKey(id, s3Key);
+            return ResponseEntity.ok().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     // ── Admin endpoints ─────────────────────────────────────────────────────

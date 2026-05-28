@@ -35,4 +35,6 @@ public class TenantRegistrationDto {
 
     /** Non-null once the registration has been approved and a Business provisioned. */
     private UUID provisionedTenantId;
+
+    private java.util.List<String> documentS3Keys = new java.util.ArrayList<>();
 }

@@ -51,4 +51,9 @@ public interface BusinessRegistrationService {
      * Resets status back to PENDING for re-review.
      */
     TenantRegistrationDto resubmitRegistration(UUID registrationId, BusinessRegistrationRequest updated);
+
+    /**
+     * Appends an S3 key to the registration's document list.
+     */
+    void addDocumentKey(UUID registrationId, String s3Key);
 }

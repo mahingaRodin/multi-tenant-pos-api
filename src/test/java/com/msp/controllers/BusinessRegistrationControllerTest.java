@@ -8,6 +8,7 @@ import com.msp.payloads.request.BusinessRegistrationRequest;
 import com.msp.payloads.request.RegistrationDecisionRequest;
 import com.msp.payloads.response.ProvisioningResponse;
 import com.msp.payloads.response.RegistrationSubmittedResponse;
+import com.msp.services.AwsS3Service;
 import com.msp.services.BusinessRegistrationService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -43,6 +44,9 @@ class BusinessRegistrationControllerTest {
 
     @MockitoBean
     private BusinessRegistrationService registrationService;
+
+    @MockitoBean
+    private AwsS3Service s3Service;
 
     // ── Shared fixtures ──────────────────────────────────────────────────────
 
