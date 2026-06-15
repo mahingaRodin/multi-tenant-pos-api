@@ -45,7 +45,7 @@ class BusinessRegistrationServiceImplTest {
     @Mock private com.msp.services.AuditLogService auditLogService;
     @Mock private com.msp.services.AwsSnsService snsService;
     @Mock private com.msp.repositories.OutboxEventRepository outboxRepo;
-    @Mock private com.fasterxml.jackson.databind.ObjectMapper objectMapper;
+    @Mock private tools.jackson.databind.ObjectMapper objectMapper;
 
     @InjectMocks
     private BusinessRegistrationServiceImpl service;

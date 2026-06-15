@@ -4,25 +4,8 @@ $ErrorActionPreference = "Stop"
 $ProjectRoot = Split-Path -Parent $PSScriptRoot
 Set-Location $ProjectRoot
 
-Write-Host "==> Starting LocalStack..." -ForegroundColor Cyan
-docker compose up -d
-
-Write-Host "==> Waiting for LocalStack..." -ForegroundColor Cyan
-$maxAttempts = 60
-$ready = $false
-for ($i = 1; $i -le $maxAttempts; $i++) {
-    $localstack = docker inspect --format='{{.State.Health.Status}}' msp-localstack 2>$null
-    if ($localstack -eq "healthy") {
-        Write-Host "LocalStack is ready." -ForegroundColor Green
-        $ready = $true
-        break
-    }
-    Start-Sleep -Seconds 2
-}
-if (-not $ready) {
-    Write-Host "Timed out waiting for LocalStack. Check: docker logs msp-localstack" -ForegroundColor Red
-    exit 1
-}
+& (Join-Path $PSScriptRoot "ensure-localstack.ps1")
+if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "==> Initializing AWS resources in LocalStack..." -ForegroundColor Cyan
 & (Join-Path $PSScriptRoot "init-localstack.ps1")
@@ -38,6 +21,9 @@ if (Test-Path $envFile) {
         }
     }
 }
+
+& (Join-Path $PSScriptRoot "resolve-java.ps1")
+if ($null -ne $LASTEXITCODE -and $LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 
 Write-Host "==> Starting Spring Boot (profile: local) on http://localhost:5000" -ForegroundColor Cyan
 Write-Host "    Swagger UI: http://localhost:5000/swagger-ui.html" -ForegroundColor Cyan
