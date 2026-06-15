@@ -6,6 +6,7 @@ import com.msp.repositories.OutboxEventRepository;
 import com.msp.services.AwsSqsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -14,6 +15,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "aws.messaging.enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class OutboxPublisher {
