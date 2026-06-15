@@ -14,6 +14,7 @@ import com.msp.payloads.response.ProvisioningResponse;
 import com.msp.repositories.BusinessRepository;
 import com.msp.repositories.TenantRegistrationRepository;
 import com.msp.repositories.UserRepository;
+import com.msp.services.AuditLogService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ class TenantProvisioningServiceImplTest {
     @Mock private BusinessRepository businessRepo;
     @Mock private UserRepository userRepo;
     @Mock private PasswordEncoder passwordEncoder;
+    @Mock private AuditLogService auditLogService;
 
     @InjectMocks
     private TenantProvisioningServiceImpl service;

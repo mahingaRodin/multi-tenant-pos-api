@@ -7,6 +7,7 @@ import com.msp.services.AwsSesService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import software.amazon.awssdk.services.sqs.SqsClient;
@@ -15,6 +16,7 @@ import software.amazon.awssdk.services.sqs.model.*;
 import java.util.List;
 
 @Component
+@ConditionalOnProperty(name = "aws.messaging.enabled", havingValue = "true")
 @RequiredArgsConstructor
 @Slf4j
 public class SqsConsumer {

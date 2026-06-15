@@ -35,5 +35,6 @@ build/
 ##env files
 .env
 
-##kiro-dev
-.kiro/
+# Kubernetes secrets (managed on server only)
+k8s/secret.yaml
+/opt/apps/*/secrets/

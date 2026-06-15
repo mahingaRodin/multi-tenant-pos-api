@@ -31,7 +31,7 @@ public class GlobalExceptionHandler {
             status = HttpStatus.NOT_FOUND;                  // 404
         } else {
             status = HttpStatus.BAD_REQUEST;                // 400
-        }
+        }   
 
         return ResponseEntity.status(status).body(errorBody(status, message));
     }
